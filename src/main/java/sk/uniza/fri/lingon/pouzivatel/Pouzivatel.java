@@ -128,10 +128,10 @@ public class Pouzivatel {
      * @return Percentuálna úspešnosť
      */
     public int getUspesnost() {
-        int celkovyPocet = spravneOdpovede + nespravneOdpovede;
+        int celkovyPocet = this.spravneOdpovede + this.nespravneOdpovede;
         if (celkovyPocet == 0) {
             return 0;
         }
-        return (int) ((double) spravneOdpovede / celkovyPocet * 100);
+        return (int)((double)this.spravneOdpovede / celkovyPocet * 100);
     }
 }

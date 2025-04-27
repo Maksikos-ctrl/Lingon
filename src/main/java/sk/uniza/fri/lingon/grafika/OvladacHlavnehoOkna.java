@@ -8,9 +8,35 @@ import sk.uniza.fri.lingon.pouzivatel.lekcia.ParovaciaOtazka;
 import sk.uniza.fri.lingon.pouzivatel.lekcia.VpisovaciaOtazka;
 import sk.uniza.fri.lingon.pouzivatel.lekcia.VyberovaOtazka;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.plaf.basic.BasicButtonUI;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridLayout;
+import java.awt.RenderingHints;
 import java.util.List;
 
 /**
@@ -87,7 +113,7 @@ public class OvladacHlavnehoOkna {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D) g.create();
+                Graphics2D g2d = (Graphics2D)g.create();
 
                 // Gradient pozadie - tmavo modrá navrchu, svetlejšia dole
                 g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
@@ -116,7 +142,7 @@ public class OvladacHlavnehoOkna {
             accountButton.setBackground(new Color(59, 89, 152, 150)); // Polopriehľadná modrá
             accountButton.setBorderPainted(false);
             accountButton.setFocusPainted(false);
-            accountButton.addActionListener(e -> zobrazProfilPouzivatela());
+            accountButton.addActionListener(e -> this.zobrazProfilPouzivatela());
 
             userInfoPanel.add(accountButton);
             mainPanel.add(userInfoPanel, BorderLayout.NORTH);
@@ -161,7 +187,7 @@ public class OvladacHlavnehoOkna {
         hratButton.setUI(new BasicButtonUI() {
             @Override
             public void paint(Graphics g, JComponent c) {
-                Graphics2D g2d = (Graphics2D) g.create();
+                Graphics2D g2d = (Graphics2D)g.create();
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
                 int w = c.getWidth();
@@ -178,7 +204,7 @@ public class OvladacHlavnehoOkna {
 
                 // Efekt svetlého okraja hore
                 g2d.setColor(new Color(255, 255, 255, 100));
-                g2d.fillRoundRect(0, 0, w, h/2, 20, 20);
+                g2d.fillRoundRect(0, 0, w, h / 2, 20, 20);
 
                 // Text
                 FontMetrics fm = g2d.getFontMetrics(c.getFont());
@@ -188,7 +214,7 @@ public class OvladacHlavnehoOkna {
 
                 g2d.setColor(Color.WHITE);
                 g2d.setFont(c.getFont());
-                g2d.drawString(text, (w - textWidth) / 2, h/2 + textHeight/4);
+                g2d.drawString(text, (w - textWidth) / 2, h / 2 + textHeight / 4);
 
                 g2d.dispose();
             }
@@ -269,7 +295,7 @@ public class OvladacHlavnehoOkna {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D) g.create();
+                Graphics2D g2d = (Graphics2D)g.create();
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
                 int size = Math.min(getWidth(), getHeight()) - 20;
@@ -281,7 +307,7 @@ public class OvladacHlavnehoOkna {
                 g2d.fillOval(x, y, size, size);
 
                 // Iniciály
-                String text = String.valueOf(aktualnyPouzivatel.getMeno().charAt(0)).toUpperCase();
+                String text = String.valueOf(OvladacHlavnehoOkna.this.aktualnyPouzivatel.getMeno().charAt(0)).toUpperCase();
                 g2d.setColor(Color.WHITE);
                 g2d.setFont(new Font("Arial", Font.BOLD, size / 2));
                 FontMetrics fm = g2d.getFontMetrics();
@@ -336,7 +362,7 @@ public class OvladacHlavnehoOkna {
         spatButton.setBackground(new Color(59, 89, 152));
         spatButton.setForeground(Color.WHITE);
         spatButton.setFocusPainted(false);
-        spatButton.addActionListener(e -> zobrazUvodnuObrazovku());
+        spatButton.addActionListener(e -> this.zobrazUvodnuObrazovku());
         buttonPanel.add(spatButton);
 
         JButton pokracovatButton = new JButton("Pokračovať v teste");
@@ -344,7 +370,7 @@ public class OvladacHlavnehoOkna {
         pokracovatButton.setBackground(new Color(76, 175, 80));
         pokracovatButton.setForeground(Color.WHITE);
         pokracovatButton.setFocusPainted(false);
-        pokracovatButton.addActionListener(e -> zobrazOtazku());
+        pokracovatButton.addActionListener(e -> this.zobrazOtazku());
         buttonPanel.add(pokracovatButton);
 
         panel.add(buttonPanel, BorderLayout.SOUTH);
@@ -509,7 +535,7 @@ public class OvladacHlavnehoOkna {
         profilButton.setBackground(new Color(59, 89, 152));
         profilButton.setBorderPainted(false);
         profilButton.setFocusPainted(false);
-        profilButton.addActionListener(e -> zobrazProfilPouzivatela());
+        profilButton.addActionListener(e -> this.zobrazProfilPouzivatela());
 
         xpPanel.add(xpLabel);
         xpPanel.add(profilButton);
@@ -560,14 +586,14 @@ public class OvladacHlavnehoOkna {
                         jeSpravna[0] = spravna;
 
                         if (spravna) {
-                            int ziskaneXP = aktualnyPouzivatel.zaznamenajSpravnuOdpoved(zadanie.getTypOtazky());
+                            int ziskaneXP = OvladacHlavnehoOkna.this.aktualnyPouzivatel.zaznamenajSpravnuOdpoved(zadanie.getTypOtazky());
                             vysledokLabel.setText("Správna odpoveď!");
                             vysledokLabel.setForeground(new Color(76, 175, 80));
                             xpZiskaneLabel.setText("Získali ste " + ziskaneXP + " XP bodov!");
                             xpZiskaneLabel.setForeground(new Color(76, 175, 80));
-                            xpLabel.setText("XP: " + aktualnyPouzivatel.getCelkoveXP());
+                            xpLabel.setText("XP: " + OvladacHlavnehoOkna.this.aktualnyPouzivatel.getCelkoveXP());
                         } else {
-                            aktualnyPouzivatel.zaznamenajNespravnuOdpoved();
+                            OvladacHlavnehoOkna.this.aktualnyPouzivatel.zaznamenajNespravnuOdpoved();
                             vysledokLabel.setText("Nesprávna odpoveď!");
                             vysledokLabel.setForeground(new Color(244, 67, 54));
                             xpZiskaneLabel.setText("Skúste to znova pri ďalšej otázke.");
@@ -583,11 +609,11 @@ public class OvladacHlavnehoOkna {
 
             // Nastavíme delegáta na aktuálnu otázku
             if (zadanie instanceof VyberovaOtazka) {
-                ((VyberovaOtazka) zadanie).setOdpovedDelegate(odpovedelegate);
+                ((VyberovaOtazka)zadanie).setOdpovedDelegate(odpovedelegate);
             } else if (zadanie instanceof VpisovaciaOtazka) {
-                ((VpisovaciaOtazka) zadanie).setOdpovedDelegate(odpovedelegate);
+                ((VpisovaciaOtazka)zadanie).setOdpovedDelegate(odpovedelegate);
             } else if (zadanie instanceof ParovaciaOtazka) {
-                ((ParovaciaOtazka) zadanie).setOdpovedDelegate(odpovedelegate);
+                ((ParovaciaOtazka)zadanie).setOdpovedDelegate(odpovedelegate);
             }
 
             // Zobrazíme otázku

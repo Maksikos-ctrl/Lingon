@@ -5,8 +5,22 @@ import sk.uniza.fri.lingon.core.UIKontajner;
 import sk.uniza.fri.lingon.core.PresnaZhodaStrategia;
 import sk.uniza.fri.lingon.grafika.OvladacHlavnehoOkna.OdpovedDelegate;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 
 /**
  * Trieda reprezentujuca otazku, kde uzivatel musi vpisat odpoved
@@ -60,7 +74,7 @@ public class VpisovaciaOtazka extends AbstractneZadanie {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D) g.create();
+                Graphics2D g2d = (Graphics2D)g.create();
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
                 int size = Math.min(getWidth(), getHeight()) - 4;
@@ -79,8 +93,8 @@ public class VpisovaciaOtazka extends AbstractneZadanie {
 
                 g2d.setStroke(new BasicStroke(2));
                 g2d.drawLine(startX, startY + penSize, startX + penSize, startY);
-                g2d.drawLine(startX, startY + penSize, startX + penSize/4, startY + penSize - penSize/4);
-                g2d.drawLine(startX + penSize, startY, startX + penSize - penSize/4, startY + penSize/4);
+                g2d.drawLine(startX, startY + penSize, startX + penSize / 4, startY + penSize - penSize / 4);
+                g2d.drawLine(startX + penSize, startY, startX + penSize - penSize / 4, startY + penSize / 4);
 
                 g2d.dispose();
             }
@@ -152,8 +166,8 @@ public class VpisovaciaOtazka extends AbstractneZadanie {
                 potvrditButton.setEnabled(false);
 
                 // Použitie delegáta pre odpoveď
-                if (odpovedDelegate != null) {
-                    odpovedDelegate.spracujOdpoved(odpoved, jeSpravna);
+                if (this.odpovedDelegate != null) {
+                    this.odpovedDelegate.spracujOdpoved(odpoved, jeSpravna);
                 }
             } else {
                 JOptionPane.showMessageDialog(

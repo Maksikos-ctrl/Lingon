@@ -2,8 +2,10 @@ package sk.uniza.fri.lingon;
 
 import sk.uniza.fri.lingon.grafika.OvladacHlavnehoOkna;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import java.awt.Dimension;
 
 /**
  * Hlavna trieda aplikacie Lingon

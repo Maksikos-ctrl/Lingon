@@ -5,8 +5,26 @@ import sk.uniza.fri.lingon.core.UIKontajner;
 import sk.uniza.fri.lingon.core.PresnaZhodaStrategia;
 import sk.uniza.fri.lingon.grafika.OvladacHlavnehoOkna.OdpovedDelegate;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.ButtonModel;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -66,7 +84,7 @@ public class VyberovaOtazka extends AbstractneZadanie {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D) g.create();
+                Graphics2D g2d = (Graphics2D)g.create();
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
                 int size = Math.min(getWidth(), getHeight()) - 4;
@@ -173,8 +191,8 @@ public class VyberovaOtazka extends AbstractneZadanie {
                 potvrditButton.setEnabled(false);
 
                 // Použitie delegáta pre odpoveď
-                if (odpovedDelegate != null) {
-                    odpovedDelegate.spracujOdpoved(vybranaOdpoved, jeSpravna);
+                if (this.odpovedDelegate != null) {
+                    this.odpovedDelegate.spracujOdpoved(vybranaOdpoved, jeSpravna);
                 }
             } else {
                 JOptionPane.showMessageDialog(

@@ -1,7 +1,13 @@
 package sk.uniza.fri.lingon.grafika;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JComponent;
+import javax.swing.Timer;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.geom.RoundRectangle2D;
 
 /**
@@ -26,12 +32,12 @@ public class AnimovanyProgressBar extends JComponent {
         setPreferredSize(new Dimension(400, 30));
 
         // Timer pre animaciu
-        animationTimer = new Timer(20, e -> {
-            if (currentValue < targetValue) {
-                currentValue = Math.min(currentValue + ANIMATION_SPEED, targetValue);
+        this.animationTimer = new Timer(20, e -> {
+            if (this.currentValue < this.targetValue) {
+                this.currentValue = Math.min(this.currentValue + ANIMATION_SPEED, this.targetValue);
                 repaint();
-            } else if (currentValue > targetValue) {
-                currentValue = Math.max(currentValue - ANIMATION_SPEED, targetValue);
+            } else if (this.currentValue > this.targetValue) {
+                this.currentValue = Math.max(this.currentValue - ANIMATION_SPEED, this.targetValue);
                 repaint();
             } else {
                 ((Timer)e.getSource()).stop();
@@ -44,16 +50,16 @@ public class AnimovanyProgressBar extends JComponent {
      * @param value Nova hodnota
      */
     public void setValue(int value) {
-        if (value < minimumValue) {
-            value = minimumValue;
+        if (value < this.minimumValue) {
+            value = this.minimumValue;
         }
-        if (value > maximumValue) {
-            value = maximumValue;
+        if (value > this.maximumValue) {
+            value = this.maximumValue;
         }
 
         this.targetValue = value;
-        if (!animationTimer.isRunning()) {
-            animationTimer.start();
+        if (!this.animationTimer.isRunning()) {
+            this.animationTimer.start();
         }
     }
 
@@ -86,13 +92,13 @@ public class AnimovanyProgressBar extends JComponent {
      */
     public void setIndeterminate(boolean indeterminate) {
         if (indeterminate) {
-            if (!animationTimer.isRunning()) {
-                targetValue = maximumValue;
-                animationTimer.start();
+            if (!this.animationTimer.isRunning()) {
+                this.targetValue = this.maximumValue;
+                this.animationTimer.start();
             }
         } else {
-            if (animationTimer.isRunning() && currentValue == maximumValue) {
-                targetValue = 0;
+            if (this.animationTimer.isRunning() && this.currentValue == this.maximumValue) {
+                this.targetValue = 0;
             }
         }
     }
@@ -100,36 +106,36 @@ public class AnimovanyProgressBar extends JComponent {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g.create();
+        Graphics2D g2d = (Graphics2D)g.create();
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         int width = getWidth();
         int height = getHeight();
 
         // Vykreslenie pozadia
-        g2d.setColor(backgroundColor);
-        g2d.fill(new RoundRectangle2D.Double(0, 0, width, height, arcSize, arcSize));
+        g2d.setColor(this.backgroundColor);
+        g2d.fill(new RoundRectangle2D.Double(0, 0, width, height, this.arcSize, this.arcSize));
 
-        if (currentValue > 0) {
+        if (this.currentValue > 0) {
             // Vypocet sirky progress baru
-            double progressWidth = (double) currentValue / maximumValue * width;
+            double progressWidth = (double)this.currentValue / this.maximumValue * width;
 
             // Vykreslenie progress baru
-            g2d.setColor(foregroundColor);
-            g2d.fill(new RoundRectangle2D.Double(0, 0, progressWidth, height, arcSize, arcSize));
+            g2d.setColor(this.foregroundColor);
+            g2d.fill(new RoundRectangle2D.Double(0, 0, progressWidth, height, this.arcSize, this.arcSize));
 
             // Vykreslenie gradientu na vrchu
             GradientPaint gradient = new GradientPaint(
-                    0, 0, highlightColor,
-                    0, (float) height / 2, foregroundColor
+                    0, 0, this.highlightColor,
+                    0, (float)height / 2, this.foregroundColor
             );
             g2d.setPaint(gradient);
-            g2d.fill(new RoundRectangle2D.Double(0, 0, progressWidth, height / 2, arcSize, arcSize));
+            g2d.fill(new RoundRectangle2D.Double(0, 0, progressWidth, height / 2, this.arcSize, this.arcSize));
 
             // Pridanie blikajucich svetielok
             if (progressWidth > 10) {
                 g2d.setColor(new Color(255, 255, 255, 100));
-                double glowPosition = ((double) System.currentTimeMillis() / 10) % (width * 2);
+                double glowPosition = ((double)System.currentTimeMillis() / 10) % (width * 2);
                 if (glowPosition > width) {
                     glowPosition = width * 2 - glowPosition;
                 }
