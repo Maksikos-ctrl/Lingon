@@ -1,4 +1,4 @@
-package sk.uniza.fri.lingon.grafika;
+package sk.uniza.fri.lingon.grafika.animacie;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

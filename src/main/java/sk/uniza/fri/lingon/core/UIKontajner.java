@@ -1,5 +1,7 @@
 package sk.uniza.fri.lingon.core;
 
+import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
+
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -9,6 +11,8 @@ import java.awt.Component;
  * Sluzi ako wrapper pre vkladanie UI komponentov do aplikacie
  */
 public class UIKontajner extends JPanel {
+    private OvladacHlavnehoOkna ovladac;
+
     /**
      * Konstruktor pre vytvorenie noveho UI kontajnera
      */
@@ -34,5 +38,21 @@ public class UIKontajner extends JPanel {
         this.removeAll();
         this.revalidate();
         this.repaint();
+    }
+
+    /**
+     * Nastavi ovladac
+     * @param ovladac Ovladac hlavneho okna
+     */
+    public void setOvladac(OvladacHlavnehoOkna ovladac) {
+        this.ovladac = ovladac;
+    }
+
+    /**
+     * Vrati ovladac
+     * @return Ovladac hlavneho okna
+     */
+    public OvladacHlavnehoOkna getOvladac() {
+        return this.ovladac;
     }
 }

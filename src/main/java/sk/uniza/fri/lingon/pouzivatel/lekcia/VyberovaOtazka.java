@@ -1,9 +1,10 @@
 package sk.uniza.fri.lingon.pouzivatel.lekcia;
 
 import sk.uniza.fri.lingon.core.AbstractneZadanie;
+import sk.uniza.fri.lingon.core.OdpovedDelegate;
 import sk.uniza.fri.lingon.core.UIKontajner;
 import sk.uniza.fri.lingon.core.PresnaZhodaStrategia;
-import sk.uniza.fri.lingon.grafika.OvladacHlavnehoOkna.OdpovedDelegate;
+import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -79,7 +80,7 @@ public class VyberovaOtazka extends AbstractneZadanie {
         JPanel headerPanel = new JPanel(new BorderLayout(10, 0));
         headerPanel.setOpaque(false);
 
-        // Ikona otáznika (jednoduchý kruh s otáznikom)
+        // Ikona otáznika
         JPanel iconPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -166,6 +167,7 @@ public class VyberovaOtazka extends AbstractneZadanie {
         potvrditButton.setForeground(Color.WHITE);
         potvrditButton.setFocusPainted(false);
         potvrditButton.addActionListener(e -> {
+
             ButtonModel selectedButton = buttonGroup.getSelection();
             if (selectedButton != null) {
                 String vybranaOdpoved = selectedButton.getActionCommand();
@@ -190,9 +192,26 @@ public class VyberovaOtazka extends AbstractneZadanie {
                 // Zablokovanie tlačidla
                 potvrditButton.setEnabled(false);
 
+                // Získame ovládač z kontajnera
+                OvladacHlavnehoOkna ovladac = kontajner.getOvladac();
+
+                // Pridanie XP za správnu odpoveď
+                if (jeSpravna && ovladac != null) {
+                    ovladac.pridajXP(10);
+                    ovladac.getSpravcaXP().updateXPLabel(ovladac.getAktualnyPouzivatel());
+
+                    // Ukážeme správu o získaných XP
+                    JOptionPane.showMessageDialog(
+                            SwingUtilities.getWindowAncestor(panel),
+                            "Správna odpoveď! +10 XP",
+                            "Výborne!",
+                            JOptionPane.INFORMATION_MESSAGE
+                    );
+                }
+
                 // Použitie delegáta pre odpoveď
                 if (this.odpovedDelegate != null) {
-                    this.odpovedDelegate.spracujOdpoved(vybranaOdpoved, jeSpravna);
+                    this.odpovedDelegate.spracujOdpoved(vybranaOdpoved, jeSpravna, this.getTypOtazky());
                 }
             } else {
                 JOptionPane.showMessageDialog(

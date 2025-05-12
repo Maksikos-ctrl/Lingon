@@ -1,9 +1,10 @@
 package sk.uniza.fri.lingon.pouzivatel.lekcia;
 
 import sk.uniza.fri.lingon.core.AbstractneZadanie;
+import sk.uniza.fri.lingon.core.OdpovedDelegate;
 import sk.uniza.fri.lingon.core.UIKontajner;
 import sk.uniza.fri.lingon.core.PresnaZhodaStrategia;
-import sk.uniza.fri.lingon.grafika.OvladacHlavnehoOkna.OdpovedDelegate;
+
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -167,7 +168,7 @@ public class VpisovaciaOtazka extends AbstractneZadanie {
 
                 // Použitie delegáta pre odpoveď
                 if (this.odpovedDelegate != null) {
-                    this.odpovedDelegate.spracujOdpoved(odpoved, jeSpravna);
+                    this.odpovedDelegate.spracujOdpoved(odpoved, jeSpravna, this.getTypOtazky());
                 }
             } else {
                 JOptionPane.showMessageDialog(

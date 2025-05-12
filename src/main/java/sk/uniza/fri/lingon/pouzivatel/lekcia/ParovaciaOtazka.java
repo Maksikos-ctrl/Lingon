@@ -3,7 +3,7 @@ package sk.uniza.fri.lingon.pouzivatel.lekcia;
 import sk.uniza.fri.lingon.core.AbstractneZadanie;
 import sk.uniza.fri.lingon.core.UIKontajner;
 import sk.uniza.fri.lingon.core.PresnaZhodaStrategia;
-import sk.uniza.fri.lingon.grafika.OvladacHlavnehoOkna.OdpovedDelegate;
+import sk.uniza.fri.lingon.core.OdpovedDelegate;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -286,7 +286,7 @@ public class ParovaciaOtazka extends AbstractneZadanie {
 
                 // Použitie delegáta pre odpoveď
                 if (this.odpovedDelegate != null) {
-                    this.odpovedDelegate.spracujOdpoved(odpovedeString, jeSpravna);
+                    this.odpovedDelegate.spracujOdpoved(odpovedeString, jeSpravna, this.getTypOtazky());
                 }
 
                 panel.revalidate();

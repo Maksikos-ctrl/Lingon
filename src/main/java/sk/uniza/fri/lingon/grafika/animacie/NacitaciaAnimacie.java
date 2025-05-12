@@ -1,4 +1,4 @@
-package sk.uniza.fri.lingon.grafika;
+package sk.uniza.fri.lingon.grafika.animacie;
 
 import javax.swing.JLabel;
 import javax.swing.Timer;

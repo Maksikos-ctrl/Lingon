@@ -1,4 +1,4 @@
-package sk.uniza.fri.lingon.grafika;
+package sk.uniza.fri.lingon.grafika.animacie;
 
 import javax.swing.JComponent;
 import javax.swing.Timer;
@@ -40,13 +40,14 @@ public class AnimovanyProgressBar extends JComponent {
                 this.currentValue = Math.max(this.currentValue - ANIMATION_SPEED, this.targetValue);
                 repaint();
             } else {
-                ((Timer)e.getSource()).stop();
+                ((Timer) e.getSource()).stop();
             }
         });
     }
 
     /**
      * Nastavi hodnotu progress baru
+     *
      * @param value Nova hodnota
      */
     public void setValue(int value) {
@@ -65,6 +66,7 @@ public class AnimovanyProgressBar extends JComponent {
 
     /**
      * Nastavi farbu popredia
+     *
      * @param color Nova farba
      */
     public void setForegroundColor(Color color) {
@@ -79,6 +81,7 @@ public class AnimovanyProgressBar extends JComponent {
 
     /**
      * Nastavi farbu pozadia
+     *
      * @param color Nova farba
      */
     public void setBackgroundColor(Color color) {
@@ -88,6 +91,7 @@ public class AnimovanyProgressBar extends JComponent {
 
     /**
      * Nastavi nevizualny progress bar
+     *
      * @param indeterminate true ak ma byt nevizualny
      */
     public void setIndeterminate(boolean indeterminate) {
@@ -106,7 +110,7 @@ public class AnimovanyProgressBar extends JComponent {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D)g.create();
+        Graphics2D g2d = (Graphics2D) g.create();
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         int width = getWidth();
@@ -118,7 +122,7 @@ public class AnimovanyProgressBar extends JComponent {
 
         if (this.currentValue > 0) {
             // Vypocet sirky progress baru
-            double progressWidth = (double)this.currentValue / this.maximumValue * width;
+            double progressWidth = (double) this.currentValue / this.maximumValue * width;
 
             // Vykreslenie progress baru
             g2d.setColor(this.foregroundColor);
@@ -127,7 +131,7 @@ public class AnimovanyProgressBar extends JComponent {
             // Vykreslenie gradientu na vrchu
             GradientPaint gradient = new GradientPaint(
                     0, 0, this.highlightColor,
-                    0, (float)height / 2, this.foregroundColor
+                    0, (float) height / 2, this.foregroundColor
             );
             g2d.setPaint(gradient);
             g2d.fill(new RoundRectangle2D.Double(0, 0, progressWidth, height / 2, this.arcSize, this.arcSize));
@@ -135,16 +139,23 @@ public class AnimovanyProgressBar extends JComponent {
             // Pridanie blikajucich svetielok
             if (progressWidth > 10) {
                 g2d.setColor(new Color(255, 255, 255, 100));
-                double glowPosition = ((double)System.currentTimeMillis() / 10) % (width * 2);
+                double glowPosition = ((double) System.currentTimeMillis() / 10) % (width * 2);
                 if (glowPosition > width) {
                     glowPosition = width * 2 - glowPosition;
                 }
                 if (glowPosition < progressWidth) {
-                    g2d.fillRect((int)glowPosition - 5, 0, 10, height);
+                    g2d.fillRect((int) glowPosition - 5, 0, 10, height);
                 }
             }
         }
 
         g2d.dispose();
+    }
+
+    public void start() {
+        if (!this.animationTimer.isRunning()) {
+            this.targetValue = this.maximumValue;
+            this.animationTimer.start();
+        }
     }
 }

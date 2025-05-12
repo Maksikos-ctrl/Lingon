@@ -1,6 +1,7 @@
 package sk.uniza.fri.lingon.core;
 
 import sk.uniza.fri.lingon.GUI.IZadanie;
+import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
 
 /**
  * Abstraktna trieda pre vsetky typy zadani/otazok v aplikacii Lingon
@@ -10,6 +11,7 @@ public abstract class AbstractneZadanie implements IZadanie {
     private String text;
     private Object odpoved;
     private IOdpovedovaStrategia strategia;
+    private OvladacHlavnehoOkna ovladac;
 
     /**
      * Konstruktor pre vytvorenie noveho zadania
@@ -17,6 +19,14 @@ public abstract class AbstractneZadanie implements IZadanie {
      */
     public AbstractneZadanie(String text) {
         this.text = text;
+    }
+
+    /**
+     * Nastavi ovladac
+     * @param ovladac Ovladac hlavneho okna
+     */
+    public void setOvladac(OvladacHlavnehoOkna ovladac) {
+        this.ovladac = ovladac;
     }
 
     /**
@@ -46,7 +56,14 @@ public abstract class AbstractneZadanie implements IZadanie {
         if (this.strategia == null) {
             throw new IllegalStateException("Strategia pre kontrolu odpovedi nie je nastavena");
         }
-        return this.strategia.validuj(vstup, this.odpoved);
+        boolean jeSpravna = this.strategia.validuj(vstup, this.odpoved);
+
+        // Pridanie XP za spravnu odpoved
+        if (jeSpravna && this.ovladac != null) {
+            this.ovladac.pridajXP(10);
+        }
+
+        return jeSpravna;
     }
 
     /**
@@ -66,11 +83,23 @@ public abstract class AbstractneZadanie implements IZadanie {
         this.odpoved = odpoved;
     }
 
+    protected void spracujSpravnuOdpoved(OvladacHlavnehoOkna ovladac) {
+        ovladac.pridajXP(5); // 5 XP per correct answer
+    }
+
     /**
      * Getter pre aktualnu strategiu kontroly
      * @return Aktualna strategia
      */
     public IOdpovedovaStrategia getStrategia() {
         return this.strategia;
+    }
+
+    /**
+     * Getter pre ovladac
+     * @return Ovladac hlavneho okna
+     */
+    protected OvladacHlavnehoOkna getOvladac() {
+        return this.ovladac;
     }
 }
