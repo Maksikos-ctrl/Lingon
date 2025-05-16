@@ -6,26 +6,8 @@ import sk.uniza.fri.lingon.core.UIKontajner;
 import sk.uniza.fri.lingon.core.PresnaZhodaStrategia;
 import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.ButtonModel;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -147,6 +129,17 @@ public class VyberovaOtazka extends AbstractneZadanie {
             radioButton.setActionCommand(moznost);
             radioButton.setOpaque(false);
             radioButton.setFocusPainted(false);
+
+            // Automatické odoslanie po výbere
+            radioButton.addActionListener(e -> {
+                // Počkáme 500ms pred spracovaním
+                Timer timer = new Timer(500, event -> {
+                    spracujOdpoved(radioButton.getActionCommand(), radioButtons);
+                });
+                timer.setRepeats(false);
+                timer.start();
+            });
+
             buttonGroup.add(radioButton);
             radioButtons.add(radioButton);
 
@@ -160,77 +153,57 @@ public class VyberovaOtazka extends AbstractneZadanie {
         scrollPane.getViewport().setOpaque(false);
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        // Tlacidlo pre potvrdenie
-        JButton potvrditButton = new JButton("Potvrdiť");
-        potvrditButton.setFont(new Font("Arial", Font.BOLD, 14));
-        potvrditButton.setBackground(new Color(76, 175, 80));
-        potvrditButton.setForeground(Color.WHITE);
-        potvrditButton.setFocusPainted(false);
-        potvrditButton.addActionListener(e -> {
+        kontajner.pridajKomponent(panel);
+    }
 
-            ButtonModel selectedButton = buttonGroup.getSelection();
-            if (selectedButton != null) {
-                String vybranaOdpoved = selectedButton.getActionCommand();
-                boolean jeSpravna = this.skontrolujOdpoved(vybranaOdpoved);
+    /**
+     * Spracuje odpoveď
+     */
+    private void spracujOdpoved(String vybranaOdpoved, List<JRadioButton> radioButtons) {
+        boolean jeSpravna = this.skontrolujOdpoved(vybranaOdpoved);
 
-                // Zablokovanie možností po odpovedi
-                for (JRadioButton button : radioButtons) {
-                    button.setEnabled(false);
+        // Zablokovanie všetkých možností
+        for (JRadioButton button : radioButtons) {
+            button.setEnabled(false);
 
-                    // Zvýraznenie správnej odpovede
-                    if (button.getActionCommand().equals(this.spravnaOdpoved)) {
-                        button.setForeground(new Color(76, 175, 80));
-                        button.setFont(new Font("Arial", Font.BOLD, 14));
-                    }
+            // Zvýraznenie správnej odpovede
+            if (button.getActionCommand().equals(this.spravnaOdpoved)) {
+                button.setForeground(new Color(76, 175, 80));
+                button.setFont(new Font("Arial", Font.BOLD, 14));
+            }
 
-                    // Zvýraznenie nesprávnej vybranej odpovede
-                    if (!jeSpravna && button.getActionCommand().equals(vybranaOdpoved)) {
-                        button.setForeground(new Color(244, 67, 54));
-                    }
-                }
+            // Zvýraznenie nesprávnej vybranej odpovede
+            if (!jeSpravna && button.getActionCommand().equals(vybranaOdpoved)) {
+                button.setForeground(new Color(244, 67, 54));
+            }
+        }
 
-                // Zablokovanie tlačidla
-                potvrditButton.setEnabled(false);
+        // Získame ovládač z kontajnera
+        OvladacHlavnehoOkna ovladac = getOvladac();
 
-                // Získame ovládač z kontajnera
-                OvladacHlavnehoOkna ovladac = kontajner.getOvladac();
-
-                // Pridanie XP za správnu odpoveď
-                if (jeSpravna && ovladac != null) {
-                    ovladac.pridajXP(10);
-                    ovladac.getSpravcaXP().updateXPLabel(ovladac.getAktualnyPouzivatel());
-
-                    // Ukážeme správu o získaných XP
-                    JOptionPane.showMessageDialog(
-                            SwingUtilities.getWindowAncestor(panel),
-                            "Správna odpoveď! +10 XP",
-                            "Výborne!",
-                            JOptionPane.INFORMATION_MESSAGE
-                    );
-                }
-
-                // Použitie delegáta pre odpoveď
-                if (this.odpovedDelegate != null) {
-                    this.odpovedDelegate.spracujOdpoved(vybranaOdpoved, jeSpravna, this.getTypOtazky());
-                }
+        // Ukážeme správu o výsledku
+        SwingUtilities.invokeLater(() -> {
+            if (jeSpravna) {
+                JOptionPane.showMessageDialog(
+                        SwingUtilities.getWindowAncestor(radioButtons.get(0)),
+                        "Správna odpoveď! +10 XP",
+                        "Výborne!",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
             } else {
                 JOptionPane.showMessageDialog(
-                        SwingUtilities.getWindowAncestor(panel),
-                        "Prosím, vyberte odpoveď",
-                        "Upozornenie",
-                        JOptionPane.WARNING_MESSAGE
+                        SwingUtilities.getWindowAncestor(radioButtons.get(0)),
+                        "Nesprávna odpoveď!",
+                        "Škoda",
+                        JOptionPane.ERROR_MESSAGE
                 );
             }
         });
 
-        // Panel pre tlačidlo
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.setOpaque(false);
-        buttonPanel.add(potvrditButton);
-
-        panel.add(buttonPanel, BorderLayout.SOUTH);
-
-        kontajner.pridajKomponent(panel);
+        // Použitie delegáta pre odpoveď
+        if (this.odpovedDelegate != null) {
+            this.odpovedDelegate.spracujOdpoved(vybranaOdpoved, jeSpravna, this.getTypOtazky());
+        }
     }
 
     /**

@@ -1,4 +1,4 @@
-package sk.uniza.fri.lingon.GUI;
+package sk.uniza.fri.lingon.gui;
 
 import sk.uniza.fri.lingon.core.UIKontajner;
 

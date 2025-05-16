@@ -2,7 +2,7 @@ package sk.uniza.fri.lingon.db;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import sk.uniza.fri.lingon.GUI.IZadanie;
+import sk.uniza.fri.lingon.gui.IZadanie;
 import sk.uniza.fri.lingon.core.KategoriaTrivia;
 import sk.uniza.fri.lingon.core.ObsahujeStrategia;
 import sk.uniza.fri.lingon.pouzivatel.lekcia.ParovaciaOtazka;
@@ -281,7 +281,7 @@ public final class OtazkyLoader {
      */
     private static String getDataFromApi(String apiUrl) throws IOException {
         URL url = new URL(apiUrl);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
         connection.setRequestMethod("GET");
 
         StringBuilder response = new StringBuilder();

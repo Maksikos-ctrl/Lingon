@@ -2,6 +2,7 @@ package sk.uniza.fri.lingon.grafika.obrazovky;
 
 import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
 import sk.uniza.fri.lingon.grafika.spravcovia.SpravcaObrazoviek;
+import sk.uniza.fri.lingon.grafika.komponenty.ModerneButtonUI;
 import sk.uniza.fri.lingon.pouzivatel.Pouzivatel;
 
 import javax.swing.BorderFactory;
@@ -180,19 +181,14 @@ public class ProfilObrazovka {
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
 
         // Dynamické tlačidlo - ak sú otázky, tak "Späť do testu", inak "Hlavné menu"
-        JButton spatButton = new JButton();
+        JButton spatButton;
         if (this.ovladac.getSpravcaKvizu().getOtazky() != null && !this.ovladac.getSpravcaKvizu().getOtazky().isEmpty()) {
-            spatButton.setText("← Späť do testu");
+            spatButton = ModerneButtonUI.vytvorModerneTlacidlo("← Späť do testu", new Color(76, 175, 80));
             spatButton.addActionListener(e -> this.ovladac.zobrazOtazku());
         } else {
-            spatButton.setText("Hlavné menu");
+            spatButton = ModerneButtonUI.vytvorModerneTlacidlo("Hlavné menu", new Color(59, 89, 152));
             spatButton.addActionListener(e -> this.ovladac.zobrazHlavneMenu());
         }
-        spatButton.setFont(new Font("Arial", Font.BOLD, 16));
-        spatButton.setBackground(new Color(59, 89, 152));
-        spatButton.setForeground(Color.WHITE);
-        spatButton.setFocusPainted(false);
-        spatButton.setPreferredSize(new Dimension(180, 40));
 
         JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         leftPanel.setOpaque(false);

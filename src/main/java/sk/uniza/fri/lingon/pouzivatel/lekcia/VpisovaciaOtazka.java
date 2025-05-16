@@ -3,8 +3,7 @@ package sk.uniza.fri.lingon.pouzivatel.lekcia;
 import sk.uniza.fri.lingon.core.AbstractneZadanie;
 import sk.uniza.fri.lingon.core.OdpovedDelegate;
 import sk.uniza.fri.lingon.core.UIKontajner;
-import sk.uniza.fri.lingon.core.PresnaZhodaStrategia;
-
+import sk.uniza.fri.lingon.core.NerozlisujucaStrategia;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -43,8 +42,8 @@ public class VpisovaciaOtazka extends AbstractneZadanie {
         // Nastavenie odpovede pre abstraktnu triedu
         this.setOdpoved(spravnaOdpoved);
 
-        // Nastavenie strategie kontroly odpovedi
-        this.setStrategia(new PresnaZhodaStrategia());
+        // Nastavenie strategie kontroly odpovedi - nerozlišujeme veľké/malé písmená
+        this.setStrategia(new NerozlisujucaStrategia());
     }
 
     /**

@@ -1,6 +1,6 @@
 package sk.uniza.fri.lingon.core;
 
-import sk.uniza.fri.lingon.GUI.IZadanie;
+import sk.uniza.fri.lingon.gui.IZadanie;
 import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
 
 /**
@@ -58,9 +58,18 @@ public abstract class AbstractneZadanie implements IZadanie {
         }
         boolean jeSpravna = this.strategia.validuj(vstup, this.odpoved);
 
-        // Pridanie XP za spravnu odpoved
-        if (jeSpravna && this.ovladac != null) {
-            this.ovladac.pridajXP(10);
+        // Pridanie XP za spravnu odpoved a aktualizácia výsledku
+        if (this.ovladac != null) {
+            if (jeSpravna) {
+                this.ovladac.pridajXP(10);
+                if (this.ovladac.getSpravcaKvizu().getAktualnyVysledok() != null) {
+                    this.ovladac.getSpravcaKvizu().getAktualnyVysledok().pridajSpravnuOdpoved();
+                }
+            } else {
+                if (this.ovladac.getSpravcaKvizu().getAktualnyVysledok() != null) {
+                    this.ovladac.getSpravcaKvizu().getAktualnyVysledok().pridajNespravnuOdpoved();
+                }
+            }
         }
 
         return jeSpravna;

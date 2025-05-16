@@ -4,6 +4,7 @@ import sk.uniza.fri.lingon.core.KategoriaTrivia;
 import sk.uniza.fri.lingon.db.OtazkyLoader;
 import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
 import sk.uniza.fri.lingon.grafika.animacie.AnimovanyProgressBar;
+import sk.uniza.fri.lingon.grafika.komponenty.ModerneButtonUI;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -31,7 +32,6 @@ import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,7 +62,7 @@ public class HlavneMenu extends JPanel {
      */
     private void inicializujUI() {
         // Horny panel s nadpisom
-        JPanel hornyPanel = this.vytvorHornyPanel();
+        JPanel hornyPanel =  this.vytvorHornyPanel();
         add(hornyPanel, BorderLayout.NORTH);
 
         // Stredny panel pre kategorie (zatial prazdny)
@@ -71,7 +71,7 @@ public class HlavneMenu extends JPanel {
         add(strednyPanel, BorderLayout.CENTER);
 
         // Dolny panel s informaciami
-        JPanel dolnyPanel =  this.vytvorDolnyPanel();
+        JPanel dolnyPanel = this.vytvorDolnyPanel();
         add(dolnyPanel, BorderLayout.SOUTH);
     }
 
@@ -136,7 +136,7 @@ public class HlavneMenu extends JPanel {
             }
         });
 
-        accountButton.addActionListener(e ->  this.ovladac.getSpravcaPouzivatela().zobrazProfilPouzivatela());
+        accountButton.addActionListener(e -> this.ovladac.getSpravcaPouzivatela().zobrazProfilPouzivatela());
         accountPanel.add(accountButton);
 
         panel.add(accountPanel, BorderLayout.EAST);
@@ -149,14 +149,23 @@ public class HlavneMenu extends JPanel {
      * @return Dolny panel
      */
     private JPanel vytvorDolnyPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JPanel panel = new JPanel(new BorderLayout());
         panel.setOpaque(false);
         panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
 
-        // Prázdny panel, prípadne sem môžeme pridať iné informácie
+        // Ľavá časť - copyright
         JLabel footerLabel = new JLabel("© 2025 Lingon");
         footerLabel.setForeground(new Color(100, 100, 100));
-        panel.add(footerLabel);
+        panel.add(footerLabel, BorderLayout.WEST);
+
+        // Stredná časť - tlačidlo pre históriu
+        JButton historiaButton = ModerneButtonUI.vytvorModerneTlacidlo("História testov", new Color(108, 117, 125));
+        historiaButton.addActionListener(e -> this.ovladac.zobrazHistoriu());
+
+        JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        centerPanel.setOpaque(false);
+        centerPanel.add(historiaButton);
+        panel.add(centerPanel, BorderLayout.CENTER);
 
         return panel;
     }
@@ -243,8 +252,8 @@ public class HlavneMenu extends JPanel {
         int riadok = 0;
         int stlpec = 0;
 
-        for (KategoriaTrivia kategoria :  this.kategorie) {
-            JPanel karta =  this.vytvorKartuKategorie(kategoria);
+        for (KategoriaTrivia kategoria : this.kategorie) {
+            JPanel karta = this.vytvorKartuKategorie(kategoria);
 
             gbc.gridx = stlpec;
             gbc.gridy = riadok;

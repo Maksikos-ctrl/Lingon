@@ -1,9 +1,18 @@
 package sk.uniza.fri.lingon.grafika.hlavny;
 
 import sk.uniza.fri.lingon.core.UIKontajner;
+import sk.uniza.fri.lingon.core.VysledokTestu;
+import sk.uniza.fri.lingon.grafika.spravcovia.SpravcaHistorie;
+import sk.uniza.fri.lingon.grafika.spravcovia.SpravcaKvizu;
+import sk.uniza.fri.lingon.grafika.spravcovia.SpravcaMenu;
+import sk.uniza.fri.lingon.grafika.spravcovia.SpravcaObrazoviek;
+import sk.uniza.fri.lingon.grafika.spravcovia.SpravcaPouzivatela;
+import sk.uniza.fri.lingon.grafika.spravcovia.SpravcaXP;
 import sk.uniza.fri.lingon.pouzivatel.Pouzivatel;
 import sk.uniza.fri.lingon.grafika.obrazovky.HlavneMenu;
-import sk.uniza.fri.lingon.grafika.spravcovia.*;
+import sk.uniza.fri.lingon.grafika.obrazovky.VysledkyObrazovka;
+import sk.uniza.fri.lingon.grafika.obrazovky.HistoriaObrazovka;
+
 import javax.swing.JFrame;
 import java.awt.BorderLayout;
 
@@ -19,6 +28,7 @@ public class OvladacHlavnehoOkna {
     private SpravcaObrazoviek spravcaObrazoviek;
     private SpravcaMenu spravcaMenu;
     private SpravcaXP spravcaXP;
+    private SpravcaHistorie spravcaHistorie;
 
     /**
      * Konštruktor pre vytvorenie ovládača hlavného okna
@@ -27,6 +37,7 @@ public class OvladacHlavnehoOkna {
     public OvladacHlavnehoOkna(JFrame hlavneOkno) {
         this.hlavneOkno = hlavneOkno;
         this.kontajner = new UIKontajner();
+        this.kontajner.setOvladac(this); // Set the ovladac reference
 
         // Inicializácia správcov
         this.spravcaPouzivatela = new SpravcaPouzivatela(this);
@@ -40,6 +51,9 @@ public class OvladacHlavnehoOkna {
         this.hlavneOkno.setLayout(new BorderLayout());
         this.hlavneOkno.add(this.kontajner, BorderLayout.CENTER);
 
+        // Nastavenie vzhľadu
+        this.spravcaHistorie = new SpravcaHistorie(this);
+
         // Vytvorenie menu
         this.spravcaMenu.vytvorMenu();
 
@@ -52,11 +66,11 @@ public class OvladacHlavnehoOkna {
      * Zobrazí úvodnú obrazovku
      */
     public void zobrazUvodnuObrazovku() {
-        Pouzivatel aktualny = spravcaPouzivatela.getAktualnyPouzivatel();
+        Pouzivatel aktualny = this.spravcaPouzivatela.getAktualnyPouzivatel();
         if (aktualny != null) {
-            zobrazHlavneMenu();
+            this.zobrazHlavneMenu();
         } else {
-            spravcaObrazoviek.zobrazUvodnuObrazovku();
+            this.spravcaObrazoviek.zobrazUvodnuObrazovku();
         }
     }
 
@@ -65,35 +79,75 @@ public class OvladacHlavnehoOkna {
      */
     public void zobrazHlavneMenu() {
         // Odstránime navigačné panely
-        spravcaObrazoviek.odstranNavigaciuPanel();
+        this.spravcaObrazoviek.odstranNavigaciuPanel();
 
         HlavneMenu hlavneMenu = new HlavneMenu(this);
-        kontajner.pridajKomponent(hlavneMenu);
+        this.kontajner.pridajKomponent(hlavneMenu);
     }
 
     /**
      * Zobrazí otázku
      */
     public void zobrazOtazku() {
-        spravcaKvizu.zobrazOtazku();
+        this.spravcaKvizu.zobrazOtazku();
     }
 
     /**
      * Načíta otázky
      */
     public void nacitajOtazky() {
-        spravcaKvizu.nacitajOtazky();
+        this.spravcaKvizu.nacitajOtazky();
+    }
+
+    /**
+     * Zobrazí výsledky testu
+     * @param vysledok Výsledok testu
+     */
+    public void zobrazVysledky(VysledokTestu vysledok) {
+        // Ukončíme test, ak ešte nebol ukončený
+        if (vysledok.getCasUkoncenia() == null) {
+            vysledok.ukonciTest();
+        }
+
+        // Uložíme výsledok do histórie
+        this.spravcaHistorie.ulozVysledok(vysledok);
+
+        this.spravcaObrazoviek.odstranNavigaciuPanel();
+        VysledkyObrazovka vysledkyObrazovka = new VysledkyObrazovka(this, vysledok);
+        this.kontajner.pridajKomponent(vysledkyObrazovka);
+    }
+
+    /**
+     * Zobrazí históriu testov
+     */
+    public void zobrazHistoriu() {
+        this.spravcaObrazoviek.odstranNavigaciuPanel();
+        HistoriaObrazovka historiaObrazovka = new HistoriaObrazovka(this);
+        this.kontajner.pridajKomponent(historiaObrazovka);
     }
 
     // Gettery
-    public JFrame getHlavneOkno() { return hlavneOkno; }
-    public UIKontajner getKontajner() { return kontajner; }
-    public SpravcaPouzivatela getSpravcaPouzivatela() { return spravcaPouzivatela; }
-    public SpravcaKvizu getSpravcaKvizu() { return spravcaKvizu; }
-    public SpravcaXP getSpravcaXP() { return spravcaXP; }
+    public JFrame getHlavneOkno() {
+        return this.hlavneOkno;
+    }
+    public UIKontajner getKontajner() {
+        return this.kontajner;
+    }
+    public SpravcaPouzivatela getSpravcaPouzivatela() {
+        return this.spravcaPouzivatela;
+    }
+    public SpravcaKvizu getSpravcaKvizu() {
+        return this.spravcaKvizu;
+    }
+    public SpravcaXP getSpravcaXP() {
+        return this.spravcaXP;
+    }
+    public SpravcaHistorie getSpravcaHistorie() {
+        return this.spravcaHistorie;
+    }
 
     public Pouzivatel getAktualnyPouzivatel() {
-        return spravcaPouzivatela.getAktualnyPouzivatel();
+        return this.spravcaPouzivatela.getAktualnyPouzivatel();
     }
 
     /**
@@ -101,9 +155,9 @@ public class OvladacHlavnehoOkna {
      * @param xp Počet XP bodov
      */
     public void pridajXP(int xp) {
-        Pouzivatel aktualny = spravcaPouzivatela.getAktualnyPouzivatel();
+        Pouzivatel aktualny =  this.spravcaPouzivatela.getAktualnyPouzivatel();
         if (aktualny != null) {
-            spravcaXP.pridajXP(xp, aktualny);
+            this.spravcaXP.pridajXP(xp, aktualny);
         }
     }
 }

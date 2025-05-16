@@ -50,8 +50,8 @@ public class NacitaciaScreenManager {
 
                     // Kratke oneskorenie pred prepnutim obrazovky
                     Timer delayTimer = new Timer(1000, e -> {
-                        if (onLoadingComplete != null) {
-                            onLoadingComplete.run();
+                        if (this.onLoadingComplete != null) {
+                            this.onLoadingComplete.run();
                         }
                     });
                     delayTimer.setRepeats(false);

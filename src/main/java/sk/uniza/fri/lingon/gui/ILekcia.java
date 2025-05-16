@@ -1,4 +1,4 @@
-package sk.uniza.fri.lingon.GUI;
+package sk.uniza.fri.lingon.gui;
 
 import java.util.List;
 

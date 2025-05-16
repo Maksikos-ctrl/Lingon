@@ -77,7 +77,7 @@ public class ParovaciaOtazka extends AbstractneZadanie {
                     }
 
 
-                    Map<String, String> spravnePary = (Map<String, String>) ocakavany;
+                    Map<String, String> ocakavanePary = (Map<String, String>)ocakavany;
 
                     return spravnePary.equals(odpovede);
                 } catch (Exception e) {

@@ -1,6 +1,6 @@
 package sk.uniza.fri.lingon.pouzivatel;
 
-import sk.uniza.fri.lingon.GUI.IZadanie;
+import sk.uniza.fri.lingon.gui.IZadanie;
 
 /**
  * Trieda reprezentujuca pouzivatela aplikacie

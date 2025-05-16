@@ -1,11 +1,13 @@
 package sk.uniza.fri.lingon.grafika.spravcovia;
 
-import sk.uniza.fri.lingon.core.AbstractneZadanie;
 import sk.uniza.fri.lingon.core.KategoriaTrivia;
+import sk.uniza.fri.lingon.core.VysledokTestu;
 import sk.uniza.fri.lingon.db.OtazkyLoader;
-import sk.uniza.fri.lingon.GUI.IZadanie;
+import sk.uniza.fri.lingon.gui.IZadanie;
+import sk.uniza.fri.lingon.core.AbstractneZadanie;
 import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
 import sk.uniza.fri.lingon.grafika.animacie.NacitaciaObrazovka;
+import sk.uniza.fri.lingon.grafika.komponenty.ModerneButtonUI;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -16,7 +18,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.util.List;
@@ -29,6 +30,8 @@ public class SpravcaKvizu {
     private OvladacHlavnehoOkna ovladac;
     private List<IZadanie> otazky;
     private int aktualnaOtazka;
+    private VysledokTestu aktualnyVysledok;
+    private String aktualnaNazovKategorie;
 
     /**
      * Konštruktor správcu kvízu
@@ -76,16 +79,39 @@ public class SpravcaKvizu {
      * @param kategoria Vybraná kategória
      */
     public void spustiKvizPreKategoriu(KategoriaTrivia kategoria) {
+        this.aktualnaNazovKategorie = kategoria.getNazov();
+
         NacitaciaObrazovka nacitaciaObrazovka = new NacitaciaObrazovka(
                 () -> {
                     try {
                         Thread.sleep(1000);
                         this.otazky = OtazkyLoader.nacitajOtazkyPreKategoriu(kategoria.getId());
                         this.aktualnaOtazka = 0;
+                        // Vytvoríme nový výsledok testu
+                        this.aktualnyVysledok = new VysledokTestu(
+                                String.valueOf(kategoria.getId()),
+                                kategoria.getNazov(),
+                                this.otazky.size()
+                        );
+
+                        // Pridáme email používateľa k výsledku
+                        if (this.ovladac.getAktualnyPouzivatel() != null) {
+                            this.aktualnyVysledok.setPouzivatelEmail(this.ovladac.getAktualnyPouzivatel().getEmail());
+                        }
                     } catch (Exception e) {
                         System.out.println("Chyba pri načítaní otázok pre kategóriu: " + e.getMessage());
                         this.otazky = OtazkyLoader.getDemoOtazky();
                         this.aktualnaOtazka = 0;
+                        this.aktualnyVysledok = new VysledokTestu(
+                                "demo",
+                                "Demo kategória",
+                                this.otazky.size()
+                        );
+
+                        // Pridáme email používateľa k výsledku aj pre demo otázky
+                        if (this.ovladac.getAktualnyPouzivatel() != null) {
+                            this.aktualnyVysledok.setPouzivatelEmail(this.ovladac.getAktualnyPouzivatel().getEmail());
+                        }
                     }
                 },
                 () -> {
@@ -114,7 +140,7 @@ public class SpravcaKvizu {
         this.ovladac.getKontajner().vymazObsah();
 
         // Vytvorenie info panelu
-        JPanel quizInfoPanel = this.vytvorInfoPanel();
+        JPanel quizInfoPanel =  this.vytvorInfoPanel();
         this.ovladac.getHlavneOkno().add(quizInfoPanel, BorderLayout.NORTH);
 
         if (this.otazky == null || this.otazky.isEmpty()) {
@@ -124,7 +150,7 @@ public class SpravcaKvizu {
 
         if (this.aktualnaOtazka < this.otazky.size()) {
             IZadanie zadanie = this.otazky.get(this.aktualnaOtazka);
-            // Если это наш AbstractneZadanie, установим овладач
+
             if (zadanie instanceof AbstractneZadanie) {
                 ((AbstractneZadanie)zadanie).setOvladac(this.ovladac);
             }
@@ -155,7 +181,7 @@ public class SpravcaKvizu {
         panel.add(progressLabel, BorderLayout.WEST);
 
         // XP label napravo, väčší
-        JLabel xpLabel = this.ovladac.getSpravcaXP().vytvorXPLabel();
+        JLabel xpLabel =  this.ovladac.getSpravcaXP().vytvorXPLabel();
         xpLabel.setFont(new Font("Arial", Font.BOLD, 20));
         xpLabel.setText("XP: " + this.ovladac.getAktualnyPouzivatel().getCelkoveXP());
         panel.add(xpLabel, BorderLayout.EAST);
@@ -173,12 +199,7 @@ public class SpravcaKvizu {
         panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
         // Ľavá časť - tlačidlo do menu
-        JButton menuButton = new JButton("Späť do menu");
-        menuButton.setFont(new Font("Arial", Font.BOLD, 16));
-        menuButton.setBackground(new Color(59, 89, 152));
-        menuButton.setForeground(Color.WHITE);
-        menuButton.setFocusPainted(false);
-        menuButton.setPreferredSize(new Dimension(150, 40));
+        JButton menuButton = ModerneButtonUI.vytvorModerneTlacidlo("Späť do menu", new Color(59, 89, 152));
         menuButton.addActionListener(e -> this.ovladac.zobrazHlavneMenu());
 
         JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -186,24 +207,44 @@ public class SpravcaKvizu {
         leftPanel.add(menuButton);
         panel.add(leftPanel, BorderLayout.WEST);
 
-        // Pravá časť - tlačidlo ďalšia otázka
-        JButton dalsiaButton = new JButton("Ďalšia otázka →");
-        dalsiaButton.setFont(new Font("Arial", Font.BOLD, 16));
-        dalsiaButton.setBackground(new Color(66, 103, 178));
-        dalsiaButton.setForeground(Color.WHITE);
-        dalsiaButton.setFocusPainted(false);
-        dalsiaButton.setPreferredSize(new Dimension(180, 40));
-        dalsiaButton.addActionListener(e -> {
-            this.aktualnaOtazka = (this.aktualnaOtazka + 1) % this.otazky.size();
-            ovladac.zobrazOtazku();
-        });
+        // Pravá časť - tlačidlo ďalšia otázka alebo ukončiť kvíz
+        JButton rightButton;
+
+        if (this.aktualnaOtazka == this.otazky.size() - 1) {
+            // Posledná otázka - tlačidlo na ukončenie
+            rightButton = ModerneButtonUI.vytvorModerneTlacidlo("Ukončiť kvíz", new Color(220, 53, 69));
+            rightButton.addActionListener(e -> {
+                this.aktualnaOtazka++;  // Posunieme na koniec
+                this.ovladac.zobrazOtazku(); // Toto zobrazí výsledky
+                this.ukonciTest();
+            });
+        } else {
+            // Normálna otázka - tlačidlo ďalej
+            rightButton = ModerneButtonUI.vytvorModerneTlacidlo("Ďalšia otázka →", new Color(76, 175, 80));
+            rightButton.addActionListener(e -> {
+                this.aktualnaOtazka++;
+                this.ovladac.zobrazOtazku();
+            });
+        }
 
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         rightPanel.setOpaque(false);
-        rightPanel.add(dalsiaButton);
+        rightPanel.add(rightButton);
         panel.add(rightPanel, BorderLayout.EAST);
 
         return panel;
+    }
+
+    public void ukonciTest() {
+        if (this.aktualnyVysledok != null) {
+            this.aktualnyVysledok.ukonciTest();
+
+            // Zobraziť výsledky
+            this.ovladac.zobrazVysledky(this.aktualnyVysledok);
+        } else {
+            // Ak nemáme výsledok, len sa vrátime do menu
+            this.ovladac.zobrazHlavneMenu();
+        }
     }
 
     // Gettery
@@ -212,5 +253,8 @@ public class SpravcaKvizu {
     }
     public int getAktualnaOtazka() {
         return this.aktualnaOtazka;
+    }
+    public VysledokTestu getAktualnyVysledok() {
+        return this.aktualnyVysledok;
     }
 }

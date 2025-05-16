@@ -1,7 +1,7 @@
 package sk.uniza.fri.lingon.pouzivatel.lekcia;
 
-import sk.uniza.fri.lingon.GUI.ILekcia;
-import sk.uniza.fri.lingon.GUI.IZadanie;
+import sk.uniza.fri.lingon.gui.ILekcia;
+import sk.uniza.fri.lingon.gui.IZadanie;
 
 import java.util.ArrayList;
 import java.util.Collections;
