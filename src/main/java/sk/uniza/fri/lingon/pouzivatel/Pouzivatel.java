@@ -1,14 +1,11 @@
 package sk.uniza.fri.lingon.pouzivatel;
 
-import sk.uniza.fri.lingon.core.VysledokTestu;
-import sk.uniza.fri.lingon.gui.IZadanie;
-
 /**
  * Trieda reprezentujuca pouzivatela aplikacie
  */
 public class Pouzivatel {
-    private String meno;
-    private String email;
+    private final String meno;
+    private final String email;
     private int celkoveXP;
     private int spravneOdpovede;
     private int nespravneOdpovede;
@@ -34,54 +31,6 @@ public class Pouzivatel {
         if (xp > 0) {
             this.celkoveXP += xp;
         }
-    }
-
-    /**
-     * Zaznamená správnu odpoveď a pridá XP
-     * @param typOtazky Typ otázky, ktorá bola zodpovedaná
-     * @return Počet získaných XP
-     */
-    public int zaznamenajSpravnuOdpoved(String typOtazky) {
-        this.spravneOdpovede++;
-
-        // Rôzne typy otázok majú rôzne XP hodnoty
-        int ziskaneXP = 0;
-
-        switch (typOtazky) {
-            case "Výberová otázka":
-                ziskaneXP = 5;
-                break;
-            case "Vpisovacia otázka":
-                ziskaneXP = 10;
-                break;
-            case "Párovacia otázka":
-                ziskaneXP = 15;
-                break;
-            default:
-                ziskaneXP = 5;
-        }
-
-        // Pridáme XP používateľovi
-        this.pridajXP(ziskaneXP);
-
-        return ziskaneXP;
-    }
-
-    /**
-     * Zaznamená nesprávnu odpoveď
-     */
-    public void zaznamenajNespravnuOdpoved() {
-        this.nespravneOdpovede++;
-    }
-
-    /**
-     * Prida lekciu uzivatelovi
-     * @param lekcia Lekcia na pridanie
-     */
-    public void pridajLekciu(IZadanie lekcia) {
-        // Tu by sme mohli pridat lekciu do zoznamu absolvovanych lekcii
-        // alebo aktualizovat stav ucenia pouzivatela
-        System.out.println("Uzivatel " + this.meno + " pridal lekciu: " + lekcia.getTypOtazky());
     }
 
     /**
@@ -138,19 +87,6 @@ public class Pouzivatel {
     }
 
     /**
-     * Aktualizuje úspešnosť na základe výsledku testu
-     * @param vysledok Výsledok testu
-     */
-    public void aktualizujUspesnost(VysledokTestu vysledok) {
-        // Pridáme správne a nesprávne odpovede z testu
-        this.spravneOdpovede += vysledok.getSpravneOdpovede();
-        this.nespravneOdpovede += vysledok.getNespravneOdpovede();
-
-        // Aktualizujeme aj XP (voliteľné)
-        this.pridajXP((int)vysledok.getUspesnost() / 10); // 10 XP za každých 100% úspešnosti
-    }
-
-    /**
      * Nastavi XP body pouzivatela
      * @param xp Hodnota XP bodov
      */
@@ -172,6 +108,22 @@ public class Pouzivatel {
      */
     public void setNespravneOdpovede(int pocet) {
         this.nespravneOdpovede = pocet;
+    }
+
+    /**
+     * Vráti úroveň používateľa na základe získaných XP
+     * @return Úroveň používateľa (0-3)
+     */
+    public int getUroven() {
+        if (this.celkoveXP >= 80) {
+            return 3;
+        } else if (this.celkoveXP >= 50) {
+            return 2;
+        } else if (this.celkoveXP >= 30) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
 

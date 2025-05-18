@@ -14,31 +14,29 @@ import java.awt.geom.RoundRectangle2D;
  * Animovany progress bar s efektom zaplnenia
  */
 public class AnimovanyProgressBar extends JComponent {
-    private int minimumValue = 0;
-    private int maximumValue = 100;
+    private final int maximumValue = 100;
     private int currentValue = 0;
     private int targetValue = 0;
-    private Color backgroundColor = new Color(40, 40, 40);
+    private final Color backgroundColor = new Color(40, 40, 40);
     private Color foregroundColor = new Color(76, 175, 80);
     private Color highlightColor = new Color(129, 199, 132);
-    private int arcSize = 15;
-    private Timer animationTimer;
+    private final Timer animationTimer;
     private static final int ANIMATION_SPEED = 3;
 
     /**
      * Konstruktor pre animovany progress bar
      */
     public AnimovanyProgressBar() {
-        setPreferredSize(new Dimension(400, 30));
+        this.setPreferredSize(new Dimension(400, 30));
 
         // Timer pre animaciu
         this.animationTimer = new Timer(20, e -> {
             if (this.currentValue < this.targetValue) {
                 this.currentValue = Math.min(this.currentValue + ANIMATION_SPEED, this.targetValue);
-                repaint();
+                this.repaint();
             } else if (this.currentValue > this.targetValue) {
                 this.currentValue = Math.max(this.currentValue - ANIMATION_SPEED, this.targetValue);
-                repaint();
+                this.repaint();
             } else {
                 ((Timer)e.getSource()).stop();
             }
@@ -51,8 +49,9 @@ public class AnimovanyProgressBar extends JComponent {
      * @param value Nova hodnota
      */
     public void setValue(int value) {
-        if (value < this.minimumValue) {
-            value = this.minimumValue;
+        int minimumValue = 0;
+        if (value < minimumValue) {
+            value = minimumValue;
         }
         if (value > this.maximumValue) {
             value = this.maximumValue;
@@ -76,35 +75,7 @@ public class AnimovanyProgressBar extends JComponent {
                 Math.min(color.getGreen() + 30, 255),
                 Math.min(color.getBlue() + 30, 255)
         );
-        repaint();
-    }
-
-    /**
-     * Nastavi farbu pozadia
-     *
-     * @param color Nova farba
-     */
-    public void setBackgroundColor(Color color) {
-        this.backgroundColor = color;
-        repaint();
-    }
-
-    /**
-     * Nastavi nevizualny progress bar
-     *
-     * @param indeterminate true ak ma byt nevizualny
-     */
-    public void setIndeterminate(boolean indeterminate) {
-        if (indeterminate) {
-            if (!this.animationTimer.isRunning()) {
-                this.targetValue = this.maximumValue;
-                this.animationTimer.start();
-            }
-        } else {
-            if (this.animationTimer.isRunning() && this.currentValue == this.maximumValue) {
-                this.targetValue = 0;
-            }
-        }
+        this.repaint();
     }
 
     @Override
@@ -113,12 +84,13 @@ public class AnimovanyProgressBar extends JComponent {
         Graphics2D g2d = (Graphics2D)g.create();
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        int width = getWidth();
-        int height = getHeight();
+        int width = this.getWidth();
+        int height = this.getHeight();
 
         // Vykreslenie pozadia
         g2d.setColor(this.backgroundColor);
-        g2d.fill(new RoundRectangle2D.Double(0, 0, width, height, this.arcSize, this.arcSize));
+        int arcSize = 15;
+        g2d.fill(new RoundRectangle2D.Double(0, 0, width, height, arcSize, arcSize));
 
         if (this.currentValue > 0) {
             // Vypocet sirky progress baru
@@ -126,7 +98,7 @@ public class AnimovanyProgressBar extends JComponent {
 
             // Vykreslenie progress baru
             g2d.setColor(this.foregroundColor);
-            g2d.fill(new RoundRectangle2D.Double(0, 0, progressWidth, height, this.arcSize, this.arcSize));
+            g2d.fill(new RoundRectangle2D.Double(0, 0, progressWidth, height, arcSize, arcSize));
 
             // Vykreslenie gradientu na vrchu
             GradientPaint gradient = new GradientPaint(
@@ -134,7 +106,7 @@ public class AnimovanyProgressBar extends JComponent {
                     0, (float)height / 2, this.foregroundColor
             );
             g2d.setPaint(gradient);
-            g2d.fill(new RoundRectangle2D.Double(0, 0, progressWidth, height / 2, this.arcSize, this.arcSize));
+            g2d.fill(new RoundRectangle2D.Double(0, 0, progressWidth, (double)height / 2, arcSize, arcSize));
 
             // Pridanie blikajucich svetielok
             if (progressWidth > 10) {

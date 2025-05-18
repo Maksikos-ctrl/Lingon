@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Trieda reprezentujuca otazku s parovanim pojmov
@@ -38,8 +39,8 @@ import java.util.Map;
  * Demonstruje polymorfizmus - rovnake rozhranie, ina implementacia
  */
 public class ParovaciaOtazka extends AbstractneZadanie {
-    private Map<String, String> spravnePary;
-    private Map<JComboBox<String>, String> uiPrvkyNaPojmy;
+    private final Map<String, String> spravnePary;
+    private final Map<JComboBox<String>, String> uiPrvkyNaPojmy;
     private OdpovedDelegate odpovedDelegate;
 
     /**
@@ -84,10 +85,6 @@ public class ParovaciaOtazka extends AbstractneZadanie {
                 }
             }
 
-            @Override
-            public String getNazovStrategie() {
-                return "Kontrola párov";
-            }
         });
     }
 
@@ -122,9 +119,9 @@ public class ParovaciaOtazka extends AbstractneZadanie {
                 Graphics2D g2d = (Graphics2D)g.create();
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                int size = Math.min(getWidth(), getHeight()) - 4;
-                int x = (getWidth() - size) / 2;
-                int y = (getHeight() - size) / 2;
+                int size = Math.min(this.getWidth(), this.getHeight()) - 4;
+                int x = (this.getWidth() - size) / 2;
+                int y = (this.getHeight() - size) / 2;
 
                 // Štvorec
                 g2d.setColor(new Color(126, 87, 194)); // Fialová
@@ -218,14 +215,14 @@ public class ParovaciaOtazka extends AbstractneZadanie {
                 public Component getListCellRendererComponent(javax.swing.JList<?> list, Object value, int index,
                                                               boolean isSelected, boolean cellHasFocus) {
                     super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                    setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+                    this.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
                     if (isSelected) {
-                        setBackground(new Color(126, 87, 194));
-                        setForeground(Color.WHITE);
+                        this.setBackground(new Color(126, 87, 194));
+                        this.setForeground(Color.WHITE);
                     } else {
-                        setBackground(Color.WHITE);
-                        setForeground(Color.BLACK);
+                        this.setBackground(Color.WHITE);
+                        this.setForeground(Color.BLACK);
                     }
 
                     return this;
@@ -254,7 +251,7 @@ public class ParovaciaOtazka extends AbstractneZadanie {
         // Tlacidlo pre potvrdenie - použitie ModerneButtonUI
         JButton potvrditButton = ModerneButtonUI.vytvorModerneTlacidlo("Potvrdiť", new Color(76, 175, 80));
 
-        potvrditButton.addActionListener(e -> {
+        potvrditButton.addActionListener(_ -> {
             // Ziskanie odpovedi od uzivatela
             Map<String, String> odpovede = new HashMap<>();
             boolean vsetkyVyplnene = true;
@@ -290,7 +287,7 @@ public class ParovaciaOtazka extends AbstractneZadanie {
                 for (Map.Entry<JComboBox<String>, String> entry : this.uiPrvkyNaPojmy.entrySet()) {
                     JComboBox<String> comboBox = entry.getKey();
                     String kluc = entry.getValue();
-                    String vybranaHodnota = comboBox.getSelectedItem().toString();
+                    String vybranaHodnota = Objects.requireNonNull(comboBox.getSelectedItem()).toString();
                     String spravnaHodnota = this.spravnePary.get(kluc);
 
                     // Zablokovanie combo boxu
@@ -335,7 +332,55 @@ public class ParovaciaOtazka extends AbstractneZadanie {
 
                 // Použitie delegáta pre odpoveď
                 if (this.odpovedDelegate != null) {
-                    this.odpovedDelegate.spracujOdpoved(odpovedeString, jeSpravna, this.getTypOtazky());
+                    // Vypočítať čiastočné XP na základe počtu správnych odpovedí
+                    int pocetSpravnych = 0;
+                    int celkovyPocet = this.uiPrvkyNaPojmy.size();
+
+                    for (Map.Entry<JComboBox<String>, String> entry : this.uiPrvkyNaPojmy.entrySet()) {
+                        JComboBox<String> comboBox = entry.getKey();
+                        String kluc = entry.getValue();
+                        String vybranaHodnota = Objects.requireNonNull(comboBox.getSelectedItem()).toString();
+                        String spravnaHodnota = this.spravnePary.get(kluc);
+
+                        if (vybranaHodnota.equals(spravnaHodnota)) {
+                            pocetSpravnych++;
+                        }
+                    }
+
+                    boolean spravna = pocetSpravnych == celkovyPocet;
+                    String bonusInfo = "";
+
+                    // Určiť počet XP na základe pomeru správnych odpovedí
+                    if (!spravna && pocetSpravnych > 0) {
+                        double pomer = (double)pocetSpravnych / celkovyPocet;
+                        int bonusXP = 0;
+
+                        if (pomer >= 0.75) {
+                            bonusXP = 8; // 75%+ správnych odpovedí = 8 XP
+                            bonusInfo = " + 8 XP (bonus za " + pocetSpravnych + "/" + celkovyPocet + " správnych)";
+                        } else if (pomer >= 0.5) {
+                            bonusXP = 5; // 50%+ správnych odpovedí = 5 XP
+                            bonusInfo = " + 5 XP (bonus za " + pocetSpravnych + "/" + celkovyPocet + " správnych)";
+                        } else if (pomer > 0) {
+                            bonusXP = 2; // aspoň 1 správna odpoveď = 2 XP
+                            bonusInfo = " + 2 XP (bonus za " + pocetSpravnych + "/" + celkovyPocet + " správnych)";
+                        }
+
+                        // Zobrazenie informácie o bonus XP
+                        if (bonusXP > 0) {
+                            JLabel bonusLabel = new JLabel("Získali ste bonus " + bonusXP + " XP za čiastočne správne odpovede!");
+                            bonusLabel.setFont(new Font("Arial", Font.BOLD, 14));
+                            bonusLabel.setForeground(new Color(76, 175, 80));
+                            bonusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+                            vysledkyPanel.add(bonusLabel);
+                            vysledkyPanel.add(Box.createVerticalStrut(5));
+                        }
+
+                        // Pridať informáciu do odpovede pre delegáta
+                        odpovedeString += ";BONUS_XP=" + bonusXP;
+                    }
+
+                    this.odpovedDelegate.spracujOdpoved(odpovedeString, spravna, this.getTypOtazky() + bonusInfo);
                 }
 
                 panel.revalidate();

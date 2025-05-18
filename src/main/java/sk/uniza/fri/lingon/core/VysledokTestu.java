@@ -1,5 +1,6 @@
 package sk.uniza.fri.lingon.core;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.io.Serializable;
@@ -8,11 +9,11 @@ import java.io.Serializable;
  * Trieda reprezentujúca výsledok testu
  */
 public class VysledokTestu implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
 
-    private String kategoriaId;
-    private String kategoriaNazov;
-    private int pocetOtazok;
+    private final String kategoriaNazov;
+    private final int pocetOtazok;
     private int spravneOdpovede;
     private int nespravneOdpovede;
     private LocalDateTime casUkoncenia;
@@ -25,7 +26,6 @@ public class VysledokTestu implements Serializable {
      * Konštruktor pre vytvorenie výsledku testu
      */
     public VysledokTestu(String kategoriaId, String kategoriaNazov, int pocetOtazok) {
-        this.kategoriaId = kategoriaId;
         this.kategoriaNazov = kategoriaNazov;
         this.pocetOtazok = pocetOtazok;
         this.spravneOdpovede = 0;
@@ -100,18 +100,7 @@ public class VysledokTestu implements Serializable {
         return this.ulozeny;
     }
 
-    /**
-     * Nastaví čas ukončenia testu (pre načítanie z DB)
-     * @param casUkoncenia Čas ukončenia testu
-     */
-    public void setCasUkoncenia(LocalDateTime casUkoncenia) {
-        this.casUkoncenia = casUkoncenia;
-    }
-
     // Gettery
-    public String getKategoriaId() {
-        return this.kategoriaId;
-    }
     public String getKategoriaNazov() {
         return this.kategoriaNazov;
     }

@@ -10,14 +10,14 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import java.awt.*;
+import java.awt.GridLayout;
 
 /**
  * Správca používateľov
  * Zodpovedný za správu používateľov a ich profilov
  */
 public class SpravcaPouzivatela {
-    private OvladacHlavnehoOkna ovladac;
+    private final OvladacHlavnehoOkna ovladac;
     private Pouzivatel aktualnyPouzivatel;
 
     /**
@@ -63,19 +63,19 @@ public class SpravcaPouzivatela {
                         "Chyba",
                         JOptionPane.ERROR_MESSAGE
                 );
-                zobrazDialogNovehoPouzivatela(); // Zobrazíme dialóg znova
+                this.zobrazDialogNovehoPouzivatela(); // Zobrazíme dialóg znova
                 return;
             }
 
             // Kontrola formátu emailu pomocou regulárneho výrazu
-            if (!jeEmailValidy(email)) {
+            if (!this.jeEmailValidy(email)) {
                 JOptionPane.showMessageDialog(
                         this.ovladac.getHlavneOkno(),
                         "Zadajte platný email.",
                         "Chyba",
                         JOptionPane.ERROR_MESSAGE
                 );
-                zobrazDialogNovehoPouzivatela(); // Zobrazíme dialóg znova
+                this.zobrazDialogNovehoPouzivatela(); // Zobrazíme dialóg znova
                 return;
             }
 
@@ -97,11 +97,9 @@ public class SpravcaPouzivatela {
                     // Prihlásenie
                     this.aktualnyPouzivatel = existujuciPouzivatel;
                     this.ovladac.zobrazHlavneMenu();
-                    return;
                 } else {
                     // Zrušiť a zobraziť dialóg znova
-                    zobrazDialogNovehoPouzivatela();
-                    return;
+                    this.zobrazDialogNovehoPouzivatela();
                 }
             } else {
                 // Vytvorenie a uloženie nového používateľa
@@ -138,11 +136,4 @@ public class SpravcaPouzivatela {
         return this.aktualnyPouzivatel;
     }
 
-    /**
-     * Setter pre aktuálneho používateľa
-     * @param pouzivatel Nový používateľ
-     */
-    public void setAktualnyPouzivatel(Pouzivatel pouzivatel) {
-        this.aktualnyPouzivatel = pouzivatel;
-    }
 }

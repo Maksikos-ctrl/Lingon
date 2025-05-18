@@ -2,12 +2,14 @@ package sk.uniza.fri.lingon.grafika.spravcovia;
 
 import sk.uniza.fri.lingon.core.KategoriaTrivia;
 import sk.uniza.fri.lingon.core.VysledokTestu;
+import sk.uniza.fri.lingon.db.DatabaseManager;
 import sk.uniza.fri.lingon.db.OtazkyLoader;
 import sk.uniza.fri.lingon.gui.IZadanie;
 import sk.uniza.fri.lingon.core.AbstractneZadanie;
 import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
 import sk.uniza.fri.lingon.grafika.animacie.NacitaciaObrazovka;
 import sk.uniza.fri.lingon.grafika.komponenty.ModerneButtonUI;
+import sk.uniza.fri.lingon.pouzivatel.Pouzivatel;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -27,11 +29,10 @@ import java.util.List;
  * Zodpovedný za načítavanie a správu otázok
  */
 public class SpravcaKvizu {
-    private OvladacHlavnehoOkna ovladac;
+    private final OvladacHlavnehoOkna ovladac;
     private List<IZadanie> otazky;
     private int aktualnaOtazka;
     private VysledokTestu aktualnyVysledok;
-    private String aktualnaNazovKategorie;
 
     /**
      * Konštruktor správcu kvízu
@@ -58,9 +59,7 @@ public class SpravcaKvizu {
                         this.aktualnaOtazka = 0;
                     }
                 },
-                () -> {
-                    this.ovladac.zobrazOtazku();
-                }
+                this.ovladac::zobrazOtazku
         );
 
         SwingUtilities.invokeLater(() -> {
@@ -79,7 +78,6 @@ public class SpravcaKvizu {
      * @param kategoria Vybraná kategória
      */
     public void spustiKvizPreKategoriu(KategoriaTrivia kategoria) {
-        this.aktualnaNazovKategorie = kategoria.getNazov();
 
         NacitaciaObrazovka nacitaciaObrazovka = new NacitaciaObrazovka(
                 () -> {
@@ -128,7 +126,7 @@ public class SpravcaKvizu {
         );
 
         this.ovladac.getKontajner().pridajKomponent(nacitaciaObrazovka);
-        SwingUtilities.invokeLater(() -> nacitaciaObrazovka.startLoading());
+        SwingUtilities.invokeLater(nacitaciaObrazovka::startLoading);
     }
 
     /**
@@ -215,14 +213,14 @@ public class SpravcaKvizu {
         if (this.aktualnaOtazka == this.otazky.size() - 1) {
             // Posledná otázka - tlačidlo na ukončenie
             rightButton = ModerneButtonUI.vytvorModerneTlacidlo("Ukončiť kvíz", new Color(220, 53, 69));
-            rightButton.addActionListener(e -> {
+            rightButton.addActionListener(_ -> {
                 this.aktualnaOtazka++;  // Posunieme na koniec
                 this.ukonciTest(); // Použijeme metódu ukonciTest namiesto priameho volania
             });
         } else {
             // Normálna otázka - tlačidlo ďalej
             rightButton = ModerneButtonUI.vytvorModerneTlacidlo("Ďalšia otázka →", new Color(76, 175, 80));
-            rightButton.addActionListener(e -> {
+            rightButton.addActionListener(_ -> {
                 this.aktualnaOtazka++;
                 this.ovladac.zobrazOtazku();
             });
@@ -240,6 +238,25 @@ public class SpravcaKvizu {
         if (this.aktualnyVysledok != null) {
             this.aktualnyVysledok.ukonciTest();
 
+            // Pridajme XP body používateľovi na základe úspešnosti
+            Pouzivatel aktualnyPouzivatel = this.ovladac.getAktualnyPouzivatel();
+            if (aktualnyPouzivatel != null) {
+                int pridaneXP = (int)(this.aktualnyVysledok.getUspesnost() / 10); // 1 XP za každých 10% úspešnosti
+                this.ovladac.pridajXP(pridaneXP);
+
+                // Zaznamenáme správne a nesprávne odpovede do profilu používateľa
+                aktualnyPouzivatel.setSpravneOdpovede(
+                        aktualnyPouzivatel.getSpravneOdpovede() + this.aktualnyVysledok.getSpravneOdpovede()
+                );
+
+                aktualnyPouzivatel.setNespravneOdpovede(
+                        aktualnyPouzivatel.getNespravneOdpovede() + this.aktualnyVysledok.getNespravneOdpovede()
+                );
+
+                // Uložiť aktualizovaného používateľa
+                DatabaseManager.aktualizujPouzivatela(aktualnyPouzivatel);
+            }
+
             // Zobraziť výsledky
             this.ovladac.zobrazVysledky(this.aktualnyVysledok);
         } else {
@@ -252,9 +269,7 @@ public class SpravcaKvizu {
     public List<IZadanie> getOtazky() {
         return this.otazky;
     }
-    public int getAktualnaOtazka() {
-        return this.aktualnaOtazka;
-    }
+
     public VysledokTestu getAktualnyVysledok() {
         return this.aktualnyVysledok;
     }

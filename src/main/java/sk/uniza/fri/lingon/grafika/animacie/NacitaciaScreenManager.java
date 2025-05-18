@@ -49,7 +49,7 @@ public class NacitaciaScreenManager {
                     this.obrazovka.updateProgress(100, "Načítavanie dokončené!");
 
                     // Kratke oneskorenie pred prepnutim obrazovky
-                    Timer delayTimer = new Timer(1000, e -> {
+                    Timer delayTimer = new Timer(1000, _ -> {
                         if (this.onLoadingComplete != null) {
                             this.onLoadingComplete.run();
                         }
@@ -67,12 +67,4 @@ public class NacitaciaScreenManager {
         });
     }
 
-    /**
-     * Zastavi nacitavanie a uvolni zdroje
-     */
-    public void shutdown() {
-        if (this.executorService != null && !this.executorService.isShutdown()) {
-            this.executorService.shutdown();
-        }
-    }
 }

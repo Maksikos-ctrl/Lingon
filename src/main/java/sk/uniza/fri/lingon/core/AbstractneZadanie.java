@@ -8,7 +8,7 @@ import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
  * Zakladna implementacia polymorfizmu pre rozne typy otazok
  */
 public abstract class AbstractneZadanie implements IZadanie {
-    private String text;
+    private final String text;
     private Object odpoved;
     private IOdpovedovaStrategia strategia;
     private OvladacHlavnehoOkna ovladac;
@@ -92,18 +92,6 @@ public abstract class AbstractneZadanie implements IZadanie {
         this.odpoved = odpoved;
     }
 
-    protected void spracujSpravnuOdpoved(OvladacHlavnehoOkna ovladac) {
-        ovladac.pridajXP(5); // 5 XP per correct answer
-    }
-
-    /**
-     * Getter pre aktualnu strategiu kontroly
-     * @return Aktualna strategia
-     */
-    public IOdpovedovaStrategia getStrategia() {
-        return this.strategia;
-    }
-
     /**
      * Getter pre ovladac
      * @return Ovladac hlavneho okna
@@ -111,4 +99,6 @@ public abstract class AbstractneZadanie implements IZadanie {
     protected OvladacHlavnehoOkna getOvladac() {
         return this.ovladac;
     }
+
+
 }

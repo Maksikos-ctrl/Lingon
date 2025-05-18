@@ -6,9 +6,9 @@ import java.awt.Color;
  * Reprezentuje kategoriu otazok v kvize
  */
 public class KategoriaTrivia {
-    private int id;
-    private String nazov;
-    private Color farba;
+    private final int id;
+    private final String nazov;
+    private final Color farba;
 
     /**
      * Konstruktor pre vytvorenie kategorie

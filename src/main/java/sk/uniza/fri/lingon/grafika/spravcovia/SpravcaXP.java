@@ -52,25 +52,11 @@ public class SpravcaXP {
         return this.xpLabel;
     }
 
-    /**
-     * Vytvorí progress label
-     * @param aktualnaOtazka Číslo aktuálnej otázky
-     * @param celkovyPocet Celkový počet otázok
-     * @return Progress label
-     */
-    public JLabel vytvorProgressLabel(int aktualnaOtazka, int celkovyPocet) {
-        this.progressLabel = new JLabel("Otázka " + (aktualnaOtazka + 1) + " z " + celkovyPocet);
-        return this.progressLabel;
-    }
-
-    // Gettery
-    public JLabel getXPLabel() {
-        return this.xpLabel;
-    }
-    public JLabel getProgressLabel() {
-        return this.progressLabel;
-    }
     public int getCurrentXP() {
         return this.currentXP;
+    }
+
+    public void setCurrentXP(int currentXP) {
+        this.currentXP = currentXP;
     }
 }

@@ -6,8 +6,24 @@ import sk.uniza.fri.lingon.core.UIKontajner;
 import sk.uniza.fri.lingon.core.PresnaZhodaStrategia;
 import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,8 +33,8 @@ import java.util.List;
  * Konkretna implementacia abstraktnej triedy AbstractneZadanie
  */
 public class VyberovaOtazka extends AbstractneZadanie {
-    private List<String> moznosti;
-    private String spravnaOdpoved;
+    private final List<String> moznosti;
+    private final String spravnaOdpoved;
     private OdpovedDelegate odpovedDelegate;
 
     /**
@@ -70,9 +86,9 @@ public class VyberovaOtazka extends AbstractneZadanie {
                 Graphics2D g2d = (Graphics2D)g.create();
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                int size = Math.min(getWidth(), getHeight()) - 4;
-                int x = (getWidth() - size) / 2;
-                int y = (getHeight() - size) / 2;
+                int size = Math.min(this.getWidth(), this.getHeight()) - 4;
+                int x = (this.getWidth() - size) / 2;
+                int y = (this.getHeight() - size) / 2;
 
                 // Kruh
                 g2d.setColor(new Color(66, 103, 178));
@@ -124,21 +140,7 @@ public class VyberovaOtazka extends AbstractneZadanie {
             optionPanel.setOpaque(false);
             optionPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
 
-            JRadioButton radioButton = new JRadioButton(moznost);
-            radioButton.setFont(new Font("Arial", Font.PLAIN, 14));
-            radioButton.setActionCommand(moznost);
-            radioButton.setOpaque(false);
-            radioButton.setFocusPainted(false);
-
-            // Automatické odoslanie po výbere
-            radioButton.addActionListener(e -> {
-                // Počkáme 500ms pred spracovaním
-                Timer timer = new Timer(500, event -> {
-                    spracujOdpoved(radioButton.getActionCommand(), radioButtons);
-                });
-                timer.setRepeats(false);
-                timer.start();
-            });
+            JRadioButton radioButton = this.getJRadioButton(moznost, radioButtons);
 
             buttonGroup.add(radioButton);
             radioButtons.add(radioButton);
@@ -154,6 +156,25 @@ public class VyberovaOtazka extends AbstractneZadanie {
         panel.add(scrollPane, BorderLayout.CENTER);
 
         kontajner.pridajKomponent(panel);
+    }
+
+    private JRadioButton getJRadioButton(String moznost, List<JRadioButton> radioButtons) {
+        JRadioButton radioButton = new JRadioButton(moznost);
+        radioButton.setFont(new Font("Arial", Font.PLAIN, 14));
+        radioButton.setActionCommand(moznost);
+        radioButton.setOpaque(false);
+        radioButton.setFocusPainted(false);
+
+        // Automatické odoslanie po výbere
+        radioButton.addActionListener(_ -> {
+            // Počkáme 500ms pred spracovaním
+            Timer timer = new Timer(500, _ -> {
+                this.spracujOdpoved(radioButton.getActionCommand(), radioButtons);
+            });
+            timer.setRepeats(false);
+            timer.start();
+        });
+        return radioButton;
     }
 
     /**
@@ -179,20 +200,20 @@ public class VyberovaOtazka extends AbstractneZadanie {
         }
 
         // Získame ovládač z kontajnera
-        OvladacHlavnehoOkna ovladac = getOvladac();
+        OvladacHlavnehoOkna ovladac = this.getOvladac();
 
         // Ukážeme správu o výsledku
         SwingUtilities.invokeLater(() -> {
             if (jeSpravna) {
                 JOptionPane.showMessageDialog(
-                        SwingUtilities.getWindowAncestor(radioButtons.get(0)),
+                        SwingUtilities.getWindowAncestor(radioButtons.getFirst()),
                         "Správna odpoveď! +10 XP",
                         "Výborne!",
                         JOptionPane.INFORMATION_MESSAGE
                 );
             } else {
                 JOptionPane.showMessageDialog(
-                        SwingUtilities.getWindowAncestor(radioButtons.get(0)),
+                        SwingUtilities.getWindowAncestor(radioButtons.getFirst()),
                         "Nesprávna odpoveď!",
                         "Škoda",
                         JOptionPane.ERROR_MESSAGE

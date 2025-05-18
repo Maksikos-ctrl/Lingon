@@ -10,11 +10,12 @@ import sk.uniza.fri.lingon.pouzivatel.lekcia.VpisovaciaOtazka;
 import sk.uniza.fri.lingon.pouzivatel.lekcia.VyberovaOtazka;
 
 import java.awt.Color;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,7 +37,7 @@ public final class OtazkyLoader {
     private static final Random RANDOM = new Random();
 
     // Množina pre uchovávanie už použitých textov otázok
-    private static final Set<String> pouziteOtazky = new HashSet<>();
+    private static final Set<String> POUZITE_OTAZKY = new HashSet<>();
 
     // Mapa farieb pre kategorie
     private static final Map<Integer, Color> CATEGORY_COLORS = new HashMap<>();
@@ -70,13 +71,6 @@ public final class OtazkyLoader {
 
     private OtazkyLoader() {
         // Private constructor to prevent instantiation
-    }
-
-    /**
-     * Vyčistí zoznam použitých otázok
-     */
-    public static void vycistiPouziteOtazky() {
-        pouziteOtazky.clear();
     }
 
 
@@ -130,7 +124,7 @@ public final class OtazkyLoader {
      */
     private static boolean jeVhodnaOtazka(String textOtazky) {
         // Ak je otázka už použitá, nie je vhodná
-        if (pouziteOtazky.contains(textOtazky)) {
+        if (POUZITE_OTAZKY.contains(textOtazky)) {
             return false;
         }
 
@@ -157,9 +151,9 @@ public final class OtazkyLoader {
             String text = decodeHtml(item.getString("question"));
 
             // Kontrola, či nebola otázka už použitá
-            if (!pouziteOtazky.contains(text) && jeVhodnaOtazka(text)) {
+            if (!POUZITE_OTAZKY.contains(text) && jeVhodnaOtazka(text)) {
                 vsetkyOtazky.add(item);
-                pouziteOtazky.add(text); // Označíme otázku ako použitú
+                POUZITE_OTAZKY.add(text); // Označíme otázku ako použitú
             }
         }
 
@@ -223,7 +217,7 @@ public final class OtazkyLoader {
         Map<String, String> pary = new HashMap<>();
         pary.put(skratText(text), spravnaOdpoved);
 
-        int countPairs = Math.min(3, vsetkyOtazky.size() - 1);
+        //int countPairs = Math.min(3, vsetkyOtazky.size() - 1);
         List<Integer> usedIndexes = new ArrayList<>();
         usedIndexes.add(currentIndex);
 
@@ -329,22 +323,23 @@ public final class OtazkyLoader {
      * @throws IOException ak nastane chyba pri komunikacii s API
      */
     private static String getDataFromApi(String apiUrl) throws IOException {
-        URL url = new URL(apiUrl);
-        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-        connection.setRequestMethod("GET");
+        try {
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(10))
+                    .build();
 
-        StringBuilder response = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(connection.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                response.append(line);
-            }
-        } finally {
-            connection.disconnect();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(apiUrl))
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            return response.body();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("API request was interrupted", e);
         }
-
-        return response.toString();
     }
 
     /**

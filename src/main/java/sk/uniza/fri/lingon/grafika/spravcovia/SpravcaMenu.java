@@ -11,7 +11,7 @@ import javax.swing.JMenuItem;
  * Zodpovedný za vytvorenie a správu menu
  */
 public class SpravcaMenu {
-    private OvladacHlavnehoOkna ovladac;
+    private final OvladacHlavnehoOkna ovladac;
 
     /**
      * Konštruktor správcu menu
@@ -31,12 +31,12 @@ public class SpravcaMenu {
         JMenu aplikaciaMenu = new JMenu("Aplikácia");
 
         JMenuItem novyPouzivatelItem = new JMenuItem("Nový používateľ");
-        novyPouzivatelItem.addActionListener(e ->
+        novyPouzivatelItem.addActionListener(_ ->
                 this.ovladac.getSpravcaPouzivatela().zobrazDialogNovehoPouzivatela());
         aplikaciaMenu.add(novyPouzivatelItem);
 
         JMenuItem koniecItem = new JMenuItem("Koniec");
-        koniecItem.addActionListener(e -> System.exit(0));
+        koniecItem.addActionListener(_ -> System.exit(0));
         aplikaciaMenu.add(koniecItem);
 
         // Pridanie menu do menu baru

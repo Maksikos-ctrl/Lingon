@@ -6,8 +6,6 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 /**
  * Trieda pre animacie na nacitacej obrazovke
@@ -35,44 +33,32 @@ public class NacitaciaAnimacie {
      * Spusti textovu animaciu nacitania
      */
     public void startTextAnimation() {
-        String[] loadingTexts = {
-                "Pripájam sa k API...",
-                "Sťahujem otázky...",
-                "Spracovávam dáta...",
-                "Pripravujem otázky..."
-        };
+        String[] loadingTexts = {"Pripájam sa k API...", "Sťahujem otázky...", "Spracovávam dáta...", "Pripravujem otázky..."};
 
         final int[] counter = {0};
-        this.animationTimer = new Timer(800, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                NacitaciaAnimacie.this.statusLabel.setText(loadingTexts[counter[0] % loadingTexts.length]);
-                counter[0]++;
-            }
+        this.animationTimer = new Timer(800, _ -> {
+            this.statusLabel.setText(loadingTexts[counter[0] % loadingTexts.length]);
+            counter[0]++;
         });
         this.animationTimer.start();
     }
-
     /**
      * Spusti animaciu progress baru
      */
     public void startProgressAnimation() {
         final int[] progress = {0};
-        this.progressTimer = new Timer(80, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Simulujeme nacitavanie - postupne spomalujeme ako sa blizime k 95%
-                if (progress[0] < 95) {
-                    if (progress[0] < 60) {
-                        progress[0] += 1;
-                    } else if (progress[0] < 80) {
-                        progress[0] += (Math.random() > 0.5 ? 1 : 0);
-                    } else {
-                        progress[0] += (Math.random() > 0.8 ? 1 : 0);
-                    }
-                    NacitaciaAnimacie.this.progressBar.setValue(progress[0]);
-                    NacitaciaAnimacie.this.percentLabel.setText(progress[0] + "%");
+        this.progressTimer = new Timer(80, _ -> {
+            // Simulujeme nacitavanie - postupne spomalujeme ako sa blizime k 95%
+            if (progress[0] < 95) {
+                if (progress[0] < 60) {
+                    progress[0] += 1;
+                } else if (progress[0] < 80) {
+                    progress[0] += (Math.random() > 0.5 ? 1 : 0);
+                } else {
+                    progress[0] += (Math.random() > 0.8 ? 1 : 0);
                 }
+                NacitaciaAnimacie.this.progressBar.setValue(progress[0]);
+                NacitaciaAnimacie.this.percentLabel.setText(progress[0] + "%");
             }
         });
         this.progressTimer.start();

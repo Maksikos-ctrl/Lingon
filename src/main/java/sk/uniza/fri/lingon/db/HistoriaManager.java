@@ -28,15 +28,6 @@ public class HistoriaManager {
     }
 
     /**
-     * Načíta všetku históriu z databázy (ponecháme pre spätnú kompatibilitu)
-     * @return Zoznam výsledkov testov
-     */
-    public static List<VysledokTestu> nacitajHistoriu() {
-        // Delegujeme operáciu na DatabaseManager
-        return DatabaseManager.nacitajHistoriu();
-    }
-
-    /**
      * Vymaže históriu testov konkrétneho používateľa
      * @param email Email používateľa
      */
@@ -45,11 +36,4 @@ public class HistoriaManager {
         DatabaseManager.vymazHistoriuPouzivatela(email);
     }
 
-    /**
-     * Vymaže celú históriu testov
-     */
-    public static void vymazHistoriu() {
-        // Delegujeme operáciu na DatabaseManager
-        DatabaseManager.vymazHistoriu();
-    }
 }

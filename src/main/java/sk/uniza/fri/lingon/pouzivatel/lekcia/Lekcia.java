@@ -11,9 +11,9 @@ import java.util.List;
  * Trieda reprezentujuca jednu lekciu v aplikacii
  */
 public class Lekcia implements ILekcia {
-    private String nazov;
-    private List<IZadanie> zadania;
-    private int id;
+    private final String nazov;
+    private final List<IZadanie> zadania;
+    private final int id;
 
     /**
      * Konstruktor pre vytvorenie novej lekcie

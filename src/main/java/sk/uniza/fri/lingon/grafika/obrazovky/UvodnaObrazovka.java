@@ -2,9 +2,29 @@ package sk.uniza.fri.lingon.grafika.obrazovky;
 
 import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.Timer;
 import javax.swing.plaf.basic.BasicButtonUI;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.RadialGradientPaint;
+import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -13,7 +33,7 @@ import java.awt.event.MouseEvent;
  * Zobrazuje uvítaciu obrazovku s tlačidlom PLAY
  */
 public class UvodnaObrazovka extends JPanel {
-    private OvladacHlavnehoOkna ovladac;
+    private final OvladacHlavnehoOkna ovladac;
 
     /**
      * Konštruktor úvodnej obrazovky
@@ -21,7 +41,7 @@ public class UvodnaObrazovka extends JPanel {
      */
     public UvodnaObrazovka(OvladacHlavnehoOkna ovladac) {
         this.ovladac = ovladac;
-        setLayout(new BorderLayout());
+        this.setLayout(new BorderLayout());
         this.inicializujUI();
     }
 
@@ -29,7 +49,7 @@ public class UvodnaObrazovka extends JPanel {
      * Inicializuje užívateľské rozhranie
      */
     private void inicializujUI() {
-        setLayout(new BorderLayout());
+        this.setLayout(new BorderLayout());
 
         // Panel pre centrálny obsah
         JPanel contentPanel = new JPanel(new GridBagLayout()) {
@@ -39,28 +59,12 @@ public class UvodnaObrazovka extends JPanel {
                 Graphics2D g2d = (Graphics2D)g.create();
 
                 // Vytvorenie gradientu
-                int w = getWidth();
-                int h = getHeight();
+                int w = this.getWidth();
+                int h = this.getHeight();
 
                 // Animovaný gradient s časom
                 long time = System.currentTimeMillis() % 10000L;  // 10-sekundový cyklus
-                float ratio = (float) time / 10000f;
-
-                // Farby pre gradient (rôzne odtiene modrej)
-                Color color1 = new Color(41, 65, 114);  // Tmavá modrá
-                Color color2 = new Color(65, 105, 225); // Kráľovská modrá
-                Color color3 = new Color(100, 149, 237); // Kukličková modrá
-
-                // Vypočítame pozíciu stredu gradientu, ktorá sa pohybuje
-                float centerX = w * 0.5f + (float) Math.sin(ratio * 2 * Math.PI) * w * 0.3f;
-                float centerY = h * 0.5f + (float) Math.cos(ratio * 2 * Math.PI) * h * 0.3f;
-
-                // Vytvorenie radiálneho gradientu
-                RadialGradientPaint paint = new RadialGradientPaint(
-                        centerX, centerY, Math.max(w, h) * 0.8f,
-                        new float[]{0f, 0.5f, 1.0f},
-                        new Color[]{color2, color1, color3}
-                );
+                RadialGradientPaint paint = getRadialGradientPaint((float)time, w, h);
 
                 g2d.setPaint(paint);
                 g2d.fillRect(0, 0, w, h);
@@ -133,10 +137,10 @@ public class UvodnaObrazovka extends JPanel {
 
         // Akcia po kliknutí
         playButton.addActionListener(e -> {
-            if (ovladac.getAktualnyPouzivatel() == null) {
-                ovladac.getSpravcaPouzivatela().zobrazDialogNovehoPouzivatela();
+            if (this.ovladac.getAktualnyPouzivatel() == null) {
+                this.ovladac.getSpravcaPouzivatela().zobrazDialogNovehoPouzivatela();
             } else {
-                ovladac.zobrazHlavneMenu();
+                this.ovladac.zobrazHlavneMenu();
             }
         });
 
@@ -146,7 +150,7 @@ public class UvodnaObrazovka extends JPanel {
         logoPanel.add(playButton, gbc);
 
         contentPanel.add(logoPanel);
-        add(contentPanel, BorderLayout.CENTER);
+        this.add(contentPanel, BorderLayout.CENTER);
 
         // Copyright v päte
         JLabel copyrightLabel = new JLabel("© 2025 Lingon - Projekt pre interaktívne kvízy");
@@ -158,7 +162,27 @@ public class UvodnaObrazovka extends JPanel {
         footerPanel.setOpaque(false);
         footerPanel.add(copyrightLabel, BorderLayout.CENTER);
 
-        add(footerPanel, BorderLayout.SOUTH);
+        this.add(footerPanel, BorderLayout.SOUTH);
+    }
+
+    private static RadialGradientPaint getRadialGradientPaint(float time, int w, int h) {
+        float ratio = time / 10000f;
+
+        // Farby pre gradient (rôzne odtiene modrej)
+        Color color1 = new Color(41, 65, 114);  // Tmavá modrá
+        Color color2 = new Color(65, 105, 225); // Kráľovská modrá
+        Color color3 = new Color(100, 149, 237); // Kukličková modrá
+
+        // Vypočítame pozíciu stredu gradientu, ktorá sa pohybuje
+        float centerX = w * 0.5f + (float)Math.sin(ratio * 2 * Math.PI) * w * 0.3f;
+        float centerY = h * 0.5f + (float)Math.cos(ratio * 2 * Math.PI) * h * 0.3f;
+
+        // Vytvorenie radiálneho gradientu
+        return new RadialGradientPaint(
+                centerX, centerY, Math.max(w, h) * 0.8f,
+                new float[]{0f, 0.5f, 1.0f},
+                new Color[]{color2, color1, color3}
+        );
     }
 
     /**

@@ -11,6 +11,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -20,6 +21,7 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridBagLayout;
 import java.awt.RenderingHints;
 
 /**
@@ -27,8 +29,8 @@ import java.awt.RenderingHints;
  * Zobrazuje informácie o používateľovi
  */
 public class ProfilObrazovka {
-    private OvladacHlavnehoOkna ovladac;
-    private Pouzivatel pouzivatel;
+    private final OvladacHlavnehoOkna ovladac;
+    private final Pouzivatel pouzivatel;
 
     /**
      * Konštruktor profilu obrazovky
@@ -70,9 +72,19 @@ public class ProfilObrazovka {
         nadpisLabel.setHorizontalAlignment(JLabel.CENTER);
         panel.add(nadpisLabel, BorderLayout.NORTH);
 
+        // Stredný panel s avatárom a informáciami
+        JPanel strednyPanel = new JPanel(new BorderLayout());
+        strednyPanel.setOpaque(false);
+
+        // Avatar panel - zobrazenie kruhového avatára
+        JPanel avatarPanel = this.vytvorProfilFotkaPanel();
+        strednyPanel.add(avatarPanel, BorderLayout.NORTH);
+
         // Informácie o používateľovi
         JPanel infoPanel = this.vytvorInfoPanel();
-        panel.add(infoPanel, BorderLayout.CENTER);
+        strednyPanel.add(infoPanel, BorderLayout.CENTER);
+
+        panel.add(strednyPanel, BorderLayout.CENTER);
 
         // Tlačidlá
         JPanel buttonPanel = this.vytvorButtonPanel();
@@ -82,93 +94,175 @@ public class ProfilObrazovka {
     }
 
     /**
-     * Vytvorí panel s informáciami
-     * @return Info panel
+     * Vytvára panel s profilovou fotkou (avatar)
+     * @return Panel s avatárom
      */
-    private JPanel vytvorInfoPanel() {
-        JPanel infoPanel = new JPanel();
-        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
-        infoPanel.setBorder(BorderFactory.createEmptyBorder(30, 0, 30, 0));
-        infoPanel.setOpaque(false);
+    private JPanel vytvorProfilFotkaPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setOpaque(false);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
 
-        // Avatar
-        JPanel avatarPanel = this.vytvorAvatar();
-        avatarPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        infoPanel.add(avatarPanel);
-        infoPanel.add(Box.createVerticalStrut(20));
-
-        // Meno
-        JLabel menoLabel = new JLabel("Meno: " + this.pouzivatel.getMeno());
-        menoLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        menoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        infoPanel.add(menoLabel);
-        infoPanel.add(Box.createVerticalStrut(10));
-
-        // Email
-        JLabel emailLabel = new JLabel("Email: " + this.pouzivatel.getEmail());
-        emailLabel.setFont(new Font("Arial", Font.PLAIN, 16));
-        emailLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        infoPanel.add(emailLabel);
-        infoPanel.add(Box.createVerticalStrut(20));
-
-        // XP a úroveň
-        JLabel xpLabel = new JLabel("XP: " + this.pouzivatel.getCelkoveXP());
-        xpLabel.setFont(new Font("Arial", Font.BOLD, 22));
-        xpLabel.setForeground(new Color(76, 175, 80));
-        xpLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        infoPanel.add(xpLabel);
-
-        int uroven = this.pouzivatel.getCelkoveXP() / 100;
-        JLabel urovenLabel = new JLabel("Úroveň: " + uroven);
-        urovenLabel.setFont(new Font("Arial", Font.BOLD, 22));
-        urovenLabel.setForeground(new Color(59, 89, 152));
-        urovenLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        infoPanel.add(urovenLabel);
-        infoPanel.add(Box.createVerticalStrut(10));
-
-        // Úspešnosť
-        JLabel uspesnostLabel = new JLabel("Úspešnosť: " + this.pouzivatel.getUspesnost() + "%");
-        uspesnostLabel.setFont(new Font("Arial", Font.PLAIN, 16));
-        uspesnostLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        infoPanel.add(uspesnostLabel);
-
-        return infoPanel;
-    }
-
-    /**
-     * Vytvorí avatar panel
-     * @return Avatar panel
-     */
-    private JPanel vytvorAvatar() {
-        return new JPanel() {
+        // Avatar - kruh s písmenom
+        JPanel avatarPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D)g.create();
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                int size = Math.min(getWidth(), getHeight()) - 20;
-                int x = (getWidth() - size) / 2;
-                int y = (getHeight() - size) / 2;
+                int width = this.getWidth();
+                int height = this.getHeight();
+                int diameter = Math.min(width, height);
 
-                g2d.setColor(new Color(59, 89, 152));
-                g2d.fillOval(x, y, size, size);
+                // Kruhový tvar
+                g2d.setColor(new Color(59, 89, 152)); // Modrá farba
+                g2d.fillOval(0, 0, diameter, diameter);
 
-                String text = String.valueOf(ProfilObrazovka.this.pouzivatel.getMeno().charAt(0)).toUpperCase();
+                // Písmeno používateľa
+                String letter = "";
+                if (ProfilObrazovka.this.pouzivatel != null && ProfilObrazovka.this.pouzivatel.getMeno() != null && !ProfilObrazovka.this.pouzivatel.getMeno().isEmpty()) {
+                    letter = ProfilObrazovka.this.pouzivatel.getMeno().substring(0, 1).toUpperCase();
+                }
+
                 g2d.setColor(Color.WHITE);
-                g2d.setFont(new Font("Arial", Font.BOLD, size / 2));
+                g2d.setFont(new Font("Arial", Font.BOLD, diameter / 2));
+
                 FontMetrics fm = g2d.getFontMetrics();
-                g2d.drawString(text,
-                        x + (size - fm.stringWidth(text)) / 2,
-                        y + size / 2 + fm.getHeight() / 4);
+                int letterWidth = fm.stringWidth(letter);
+                int letterHeight = fm.getHeight();
+
+                g2d.drawString(letter, (diameter - letterWidth) / 2,
+                        (diameter - letterHeight) / 2 + fm.getAscent());
+
                 g2d.dispose();
             }
 
             @Override
             public Dimension getPreferredSize() {
-                return new Dimension(100, 100);
+                return new Dimension(120, 120);
+            }
+
+            @Override
+            public Dimension getMinimumSize() {
+                return new Dimension(120, 120);
+            }
+
+            @Override
+            public Dimension getMaximumSize() {
+                return new Dimension(120, 120);
             }
         };
+
+        panel.add(avatarPanel);
+        return panel;
+    }
+
+    /**
+     * Vytvorí panel s informáciami
+     * @return Info panel
+     */
+    private JPanel vytvorInfoPanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setOpaque(false);
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
+        panel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Meno používateľa
+        JLabel menoLabel = new JLabel("Meno: " + this.pouzivatel.getMeno());
+        menoLabel.setFont(new Font("Arial", Font.PLAIN, 18));
+        menoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(menoLabel);
+        panel.add(Box.createVerticalStrut(10));
+
+        // Email používateľa
+        JLabel emailLabel = new JLabel("Email: " + this.pouzivatel.getEmail());
+        emailLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+        emailLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(emailLabel);
+        panel.add(Box.createVerticalStrut(30));
+
+        // XP - väčšie a farebné
+        JLabel xpLabel = new JLabel("XP: " + this.pouzivatel.getCelkoveXP());
+        xpLabel.setFont(new Font("Arial", Font.BOLD, 26));
+        xpLabel.setForeground(new Color(76, 175, 80));
+        xpLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(xpLabel);
+        panel.add(Box.createVerticalStrut(10));
+
+        // Úroveň - s vizuálnym indikátorom progresu
+        int uroven = this.pouzivatel.getUroven();
+        JLabel urovenLabel = new JLabel("Úroveň: " + uroven);
+        urovenLabel.setFont(new Font("Arial", Font.BOLD, 22));
+        urovenLabel.setForeground(new Color(59, 89, 152));
+        urovenLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(urovenLabel);
+
+        // Progress k ďalšej úrovni
+        JPanel progressPanel = new JPanel(new BorderLayout(5, 0));
+        progressPanel.setOpaque(false);
+        progressPanel.setMaximumSize(new Dimension(300, 25));
+        progressPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JProgressBar progressBar = this.getJProgressBar(uroven);
+
+        progressPanel.add(progressBar, BorderLayout.CENTER);
+        panel.add(Box.createVerticalStrut(10)); // pridáme medzeru pred progress barom
+        panel.add(progressPanel);
+        panel.add(Box.createVerticalStrut(30));
+
+        // Úspešnosť
+        JLabel uspesnostLabel = new JLabel("Úspešnosť: " + this.pouzivatel.getUspesnost() + "%");
+        uspesnostLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        uspesnostLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(uspesnostLabel);
+
+        return panel;
+    }
+
+    private JProgressBar getJProgressBar(int uroven) {
+        JProgressBar progressBar = new JProgressBar(0, 100);
+        progressBar.setStringPainted(true);
+
+        // Lepšie formátovanie progress baru
+        progressBar.setPreferredSize(new Dimension(300, 20));
+        progressBar.setBackground(new Color(230, 230, 240));
+        progressBar.setForeground(new Color(41, 128, 185));
+        progressBar.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 210)));
+
+        // Výpočet progresu k ďalšej úrovni
+        int xp = this.pouzivatel.getCelkoveXP();
+        int cieloveXP;
+        int startXP = 0;
+
+        if (uroven == 0) {
+            cieloveXP = 30;
+        } else if (uroven == 1) {
+            startXP = 30;
+            cieloveXP = 50;
+        } else if (uroven == 2) {
+            startXP = 50;
+            cieloveXP = 80;
+        } else {
+            // Maximálna úroveň
+            startXP = 80;
+            cieloveXP = 100; // Len pre vizuálny indikátor
+        }
+
+        // Výpočet percentuálneho progresu
+        int progress;
+        if (uroven < 3) {
+            progress = (int)((float)(xp - startXP) / (cieloveXP - startXP) * 100);
+            progress = Math.min(100, Math.max(0, progress));
+            progressBar.setValue(progress);
+
+            // Lepší popis progress baru
+            progressBar.setString(xp + " / " + cieloveXP + " XP");
+        } else {
+            progressBar.setValue(100);
+            progressBar.setString("Maximálna úroveň dosiahnutá!");
+        }
+        return progressBar;
     }
 
     /**
@@ -184,10 +278,10 @@ public class ProfilObrazovka {
         JButton spatButton;
         if (this.ovladac.getSpravcaKvizu().getOtazky() != null && !this.ovladac.getSpravcaKvizu().getOtazky().isEmpty()) {
             spatButton = ModerneButtonUI.vytvorModerneTlacidlo("← Späť do testu", new Color(76, 175, 80));
-            spatButton.addActionListener(e -> this.ovladac.zobrazOtazku());
+            spatButton.addActionListener(_ -> this.ovladac.zobrazOtazku());
         } else {
             spatButton = ModerneButtonUI.vytvorModerneTlacidlo("Hlavné menu", new Color(59, 89, 152));
-            spatButton.addActionListener(e -> this.ovladac.zobrazHlavneMenu());
+            spatButton.addActionListener(_ -> this.ovladac.zobrazHlavneMenu());
         }
 
         JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));

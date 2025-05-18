@@ -11,7 +11,7 @@ import java.util.List;
  * Správca histórie testov
  */
 public class SpravcaHistorie {
-    private OvladacHlavnehoOkna ovladac;
+    private final OvladacHlavnehoOkna ovladac;
 
     /**
      * Konštruktor pre vytvorenie správcu histórie
@@ -47,27 +47,27 @@ public class SpravcaHistorie {
             }
 
             // Nastavíme email aktuálneho používateľa
-            if (ovladac.getAktualnyPouzivatel() != null) {
-                vysledok.setPouzivatelEmail(ovladac.getAktualnyPouzivatel().getEmail());
+            if (this.ovladac.getAktualnyPouzivatel() != null) {
+                vysledok.setPouzivatelEmail(this.ovladac.getAktualnyPouzivatel().getEmail());
 
                 // Aktualizujeme úspešnosť používateľa
-                ovladac.getAktualnyPouzivatel().pridajXP((int)(vysledok.getUspesnost() / 10));
+                this.ovladac.getAktualnyPouzivatel().pridajXP((int)(vysledok.getUspesnost() / 10));
 
                 // Aktualizujeme štatistiky
                 if (vysledok.getSpravneOdpovede() > 0) {
-                    ovladac.getAktualnyPouzivatel().setSpravneOdpovede(
-                            ovladac.getAktualnyPouzivatel().getSpravneOdpovede() + vysledok.getSpravneOdpovede()
+                    this.ovladac.getAktualnyPouzivatel().setSpravneOdpovede(
+                            this.ovladac.getAktualnyPouzivatel().getSpravneOdpovede() + vysledok.getSpravneOdpovede()
                     );
                 }
 
                 if (vysledok.getNespravneOdpovede() > 0) {
-                    ovladac.getAktualnyPouzivatel().setNespravneOdpovede(
-                            ovladac.getAktualnyPouzivatel().getNespravneOdpovede() + vysledok.getNespravneOdpovede()
+                    this.ovladac.getAktualnyPouzivatel().setNespravneOdpovede(
+                            this.ovladac.getAktualnyPouzivatel().getNespravneOdpovede() + vysledok.getNespravneOdpovede()
                     );
                 }
 
                 // Uložíme aktualizovaného používateľa do databázy
-                DatabaseManager.aktualizujPouzivatela(ovladac.getAktualnyPouzivatel());
+                DatabaseManager.aktualizujPouzivatela(this.ovladac.getAktualnyPouzivatel());
             } else {
                 vysledok.setPouzivatelEmail("unknown");
             }
@@ -80,12 +80,4 @@ public class SpravcaHistorie {
         }
     }
 
-    /**
-     * Vymaže históriu testov aktuálneho používateľa
-     */
-    public void vymazHistoriu() {
-        if (this.ovladac.getAktualnyPouzivatel() != null) {
-            HistoriaManager.vymazHistoriuPouzivatela(this.ovladac.getAktualnyPouzivatel().getEmail());
-        }
-    }
 }

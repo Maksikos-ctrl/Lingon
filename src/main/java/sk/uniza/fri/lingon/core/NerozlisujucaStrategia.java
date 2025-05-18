@@ -24,12 +24,4 @@ public class NerozlisujucaStrategia implements IOdpovedovaStrategia {
         return vstupTrim.equalsIgnoreCase(ocakavanyTrim);
     }
 
-    /**
-     * Vrati nazov strategie
-     * @return Nazov strategie
-     */
-    @Override
-    public String getNazovStrategie() {
-        return "Nerozlišujúca stratégia (veľké/malé písmená)";
-    }
 }

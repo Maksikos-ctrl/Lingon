@@ -2,8 +2,12 @@ package sk.uniza.fri.lingon;
 
 import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
 
-import javax.swing.*;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import java.awt.Dimension;
+import java.util.Objects;
 
 /**
  * Hlavna trieda aplikacie Lingon
@@ -23,9 +27,7 @@ public class Main {
         }
 
         // Spustenie aplikacie v EDT (Event Dispatch Thread)
-        SwingUtilities.invokeLater(() -> {
-            vytvorGUI();
-        });
+        SwingUtilities.invokeLater(Main::vytvorGUI);
     }
 
     /**
@@ -41,7 +43,7 @@ public class Main {
         // Nastavenie ikony aplikácie
         try {
             // Načítaj ikonu z resources
-            ImageIcon icon = new ImageIcon(Main.class.getResource("/images/icon.png"));
+            ImageIcon icon = new ImageIcon(Objects.requireNonNull(Main.class.getResource("/images/icon.png")));
             hlavneOkno.setIconImage(icon.getImage());
         } catch (Exception e) {
             System.err.println("Nepodarilo sa načítať ikonu: " + e.getMessage());

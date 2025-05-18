@@ -22,8 +22,8 @@ public class NacitaciaObrazovka extends JPanel {
     private JLabel statusLabel;
     private AnimovanyProgressBar progressBar;
     private JLabel percentLabel;
-    private NacitaciaAnimacie animacie;
-    private NacitaciaScreenManager manager;
+    private final NacitaciaAnimacie animacie;
+    private final NacitaciaScreenManager manager;
 
     /**
      * Konstruktor pre vytvorenie nacitacej obrazovky
@@ -35,7 +35,7 @@ public class NacitaciaObrazovka extends JPanel {
         super(new BorderLayout());
 
         // Nastavenie pozadia
-        setBackground(new Color(27, 32, 44));
+        this.setBackground(new Color(27, 32, 44));
 
         // Vytvorenie komponentov UI
         this.initializeUI();
@@ -177,8 +177,8 @@ public class NacitaciaObrazovka extends JPanel {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         // Kreslenie pozadia a svetelnych lucov
-        NacitaciaAnimacie.drawBackground(g2d, getWidth(), getHeight());
-        NacitaciaAnimacie.drawLightRays(g2d, getWidth(), getHeight());
+        NacitaciaAnimacie.drawBackground(g2d, this.getWidth(), this.getHeight());
+        NacitaciaAnimacie.drawLightRays(g2d, this.getWidth(), this.getHeight());
 
         g2d.dispose();
     }

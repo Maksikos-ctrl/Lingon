@@ -21,14 +21,13 @@ import java.awt.BorderLayout;
  * Koordinuje prácu ostatných správcov
  */
 public class OvladacHlavnehoOkna {
-    private JFrame hlavneOkno;
-    private UIKontajner kontajner;
-    private SpravcaKvizu spravcaKvizu;
-    private SpravcaPouzivatela spravcaPouzivatela;
-    private SpravcaObrazoviek spravcaObrazoviek;
-    private SpravcaMenu spravcaMenu;
-    private SpravcaXP spravcaXP;
-    private SpravcaHistorie spravcaHistorie;
+    private final JFrame hlavneOkno;
+    private final UIKontajner kontajner;
+    private final SpravcaKvizu spravcaKvizu;
+    private final SpravcaPouzivatela spravcaPouzivatela;
+    private final SpravcaObrazoviek spravcaObrazoviek;
+    private final SpravcaXP spravcaXP;
+    private final SpravcaHistorie spravcaHistorie;
 
     /**
      * Konštruktor pre vytvorenie ovládača hlavného okna
@@ -44,7 +43,7 @@ public class OvladacHlavnehoOkna {
         this.spravcaKvizu = new SpravcaKvizu(this);
         this.spravcaXP = new SpravcaXP();
         this.spravcaObrazoviek = new SpravcaObrazoviek(this);
-        this.spravcaMenu = new SpravcaMenu(this);
+        SpravcaMenu spravcaMenu = new SpravcaMenu(this);
 
         // Inicializácia hlavného okna
         this.hlavneOkno.getContentPane().removeAll();
@@ -55,7 +54,7 @@ public class OvladacHlavnehoOkna {
         this.spravcaHistorie = new SpravcaHistorie(this);
 
         // Vytvorenie menu
-        this.spravcaMenu.vytvorMenu();
+        spravcaMenu.vytvorMenu();
 
         // Revalidácia okna
         this.hlavneOkno.revalidate();
@@ -90,13 +89,6 @@ public class OvladacHlavnehoOkna {
      */
     public void zobrazOtazku() {
         this.spravcaKvizu.zobrazOtazku();
-    }
-
-    /**
-     * Načíta otázky
-     */
-    public void nacitajOtazky() {
-        this.spravcaKvizu.nacitajOtazky();
     }
 
     /**

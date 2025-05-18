@@ -12,6 +12,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -26,7 +27,7 @@ import java.util.List;
  * Obrazovka zobrazujúca históriu testov
  */
 public class HistoriaObrazovka extends JPanel {
-    private OvladacHlavnehoOkna ovladac;
+    private final OvladacHlavnehoOkna ovladac;
     private JTable tabulka;
 
     /**
@@ -36,8 +37,8 @@ public class HistoriaObrazovka extends JPanel {
     public HistoriaObrazovka(OvladacHlavnehoOkna ovladac) {
         this.ovladac = ovladac;
 
-        setLayout(new BorderLayout());
-        setBackground(new Color(240, 240, 245));
+        this.setLayout(new BorderLayout());
+        this.setBackground(new Color(240, 240, 245));
         this.inicializujUI();
     }
 
@@ -47,7 +48,7 @@ public class HistoriaObrazovka extends JPanel {
     private void inicializujUI() {
         // Horný panel s nadpisom
         JPanel hornyPanel =  this.vytvorHornyPanel();
-        add(hornyPanel, BorderLayout.NORTH);
+        this.add(hornyPanel, BorderLayout.NORTH);
 
         // Kontrola histórie pred vytvorením stredného panelu
         List<VysledokTestu> historia =  this.ovladac.getSpravcaHistorie().getHistoria();
@@ -77,11 +78,11 @@ public class HistoriaObrazovka extends JPanel {
             infoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
             prazdnyPanel.add(textPanel);
-            add(prazdnyPanel, BorderLayout.CENTER);
+            this.add(prazdnyPanel, BorderLayout.CENTER);
         } else {
             // Stredný panel s tabuľkou
             JPanel strednyPanel =  this.vytvorStrednyPanel();
-            add(strednyPanel, BorderLayout.CENTER);
+            this.add(strednyPanel, BorderLayout.CENTER);
 
             // Načítať históriu do tabuľky
             this.nacitajHistoriu();
@@ -89,7 +90,7 @@ public class HistoriaObrazovka extends JPanel {
 
         // Dolný panel s tlačidlami
         JPanel dolnyPanel =  this.vytvorDolnyPanel();
-        add(dolnyPanel, BorderLayout.SOUTH);
+        this.add(dolnyPanel, BorderLayout.SOUTH);
     }
 
     /**
@@ -147,6 +148,16 @@ public class HistoriaObrazovka extends JPanel {
             this.tabulka.getTableHeader().setFont(new Font("Arial", Font.BOLD, 16));
             this.tabulka.getTableHeader().setBackground(new Color(41, 65, 114));
             this.tabulka.getTableHeader().setForeground(Color.WHITE);
+            this.tabulka.getTableHeader().setReorderingAllowed(false); // Zakázanie presúvania stĺpcov
+            this.tabulka.getTableHeader().setResizingAllowed(true); // Povolenie zmeny veľkosti stĺpcov
+
+            // Zarovnanie hodnôt v stĺpcoch
+            DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+            centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+            this.tabulka.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
+            this.tabulka.getColumnModel().getColumn(3).setCellRenderer(centerRenderer);
+            this.tabulka.getColumnModel().getColumn(4).setCellRenderer(centerRenderer);
+            this.tabulka.getColumnModel().getColumn(5).setCellRenderer(centerRenderer);
 
             JScrollPane scrollPane = new JScrollPane(this.tabulka);
             scrollPane.setPreferredSize(new Dimension(800, 400));
@@ -166,7 +177,7 @@ public class HistoriaObrazovka extends JPanel {
 
         // Tlačidlo späť do menu
         JButton menuButton = ModerneButtonUI.vytvorModerneTlacidlo("Späť do menu", new Color(59, 89, 152));
-        menuButton.addActionListener(e -> this.ovladac.zobrazHlavneMenu());
+        menuButton.addActionListener(_ -> this.ovladac.zobrazHlavneMenu());
 
         panel.add(menuButton);
 

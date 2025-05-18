@@ -11,7 +11,7 @@ import java.awt.Component;
  * Zodpovedný za zobrazovanie rôznych obrazoviek
  */
 public class SpravcaObrazoviek {
-    private OvladacHlavnehoOkna ovladac;
+    private final OvladacHlavnehoOkna ovladac;
 
     /**
      * Konštruktor správcu obrazoviek

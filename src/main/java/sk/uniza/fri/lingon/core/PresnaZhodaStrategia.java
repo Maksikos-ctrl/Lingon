@@ -19,12 +19,4 @@ public class PresnaZhodaStrategia implements IOdpovedovaStrategia {
         return vstup.trim().equalsIgnoreCase(ocakavany.toString().trim());
     }
 
-    /**
-     * Vrati nazov strategie
-     * @return Nazov strategie
-     */
-    @Override
-    public String getNazovStrategie() {
-        return "Presná zhoda";
-    }
 }

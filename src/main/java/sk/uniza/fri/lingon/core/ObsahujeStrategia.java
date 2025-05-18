@@ -20,12 +20,4 @@ public class ObsahujeStrategia implements IOdpovedovaStrategia {
         return vstup.toLowerCase().contains(ocakavany.toString().toLowerCase());
     }
 
-    /**
-     * Vrati nazov strategie
-     * @return Nazov strategie
-     */
-    @Override
-    public String getNazovStrategie() {
-        return "Obsahuje kľúčové slovo";
-    }
 }

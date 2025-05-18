@@ -22,8 +22,8 @@ import java.awt.GridLayout;
  * Obrazovka zobrazujúca výsledky testu
  */
 public class VysledkyObrazovka extends JPanel {
-    private OvladacHlavnehoOkna ovladac;
-    private VysledokTestu vysledok;
+    private final OvladacHlavnehoOkna ovladac;
+    private final VysledokTestu vysledok;
 
     /**
      * Konštruktor obrazovky výsledkov
@@ -34,8 +34,8 @@ public class VysledkyObrazovka extends JPanel {
         this.ovladac = ovladac;
         this.vysledok = vysledok;
 
-        setLayout(new BorderLayout());
-        setBackground(new Color(240, 240, 245));
+        this.setLayout(new BorderLayout());
+        this.setBackground(new Color(240, 240, 245));
         this.inicializujUI();
     }
 
@@ -45,15 +45,15 @@ public class VysledkyObrazovka extends JPanel {
     private void inicializujUI() {
         // Horný panel s nadpisom
         JPanel hornyPanel = this.vytvorHornyPanel();
-        add(hornyPanel, BorderLayout.NORTH);
+        this.add(hornyPanel, BorderLayout.NORTH);
 
         // Stredný panel s výsledkami
         JPanel strednyPanel = this.vytvorStrednyPanel();
-        add(strednyPanel, BorderLayout.CENTER);
+        this.add(strednyPanel, BorderLayout.CENTER);
 
         // Dolný panel s tlačidlami
         JPanel dolnyPanel = this.vytvorDolnyPanel();
-        add(dolnyPanel, BorderLayout.SOUTH);
+        this.add(dolnyPanel, BorderLayout.SOUTH);
     }
 
     /**
@@ -90,19 +90,7 @@ public class VysledkyObrazovka extends JPanel {
         panel.add(Box.createVerticalStrut(20));
 
         // Celkový výsledok - veľké číslo
-        double uspesnost = this.vysledok.getUspesnost();
-        JLabel uspesnostLabel = new JLabel(String.format("%.0f%%", uspesnost));
-        uspesnostLabel.setFont(new Font("Arial", Font.BOLD, 72));
-        uspesnostLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        // Farba podľa úspešnosti
-        if (uspesnost >= 80) {
-            uspesnostLabel.setForeground(new Color(76, 175, 80));
-        } else if (uspesnost >= 60) {
-            uspesnostLabel.setForeground(new Color(255, 152, 0));
-        } else {
-            uspesnostLabel.setForeground(new Color(244, 67, 54));
-        }
+        JLabel uspesnostLabel = this.getJLabel();
 
         panel.add(uspesnostLabel);
         panel.add(Box.createVerticalStrut(30));
@@ -133,6 +121,23 @@ public class VysledkyObrazovka extends JPanel {
         return panel;
     }
 
+    private JLabel getJLabel() {
+        double uspesnost = this.vysledok.getUspesnost();
+        JLabel uspesnostLabel = new JLabel(String.format("%.0f%%", uspesnost));
+        uspesnostLabel.setFont(new Font("Arial", Font.BOLD, 72));
+        uspesnostLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Farba podľa úspešnosti
+        if (uspesnost >= 80) {
+            uspesnostLabel.setForeground(new Color(76, 175, 80));
+        } else if (uspesnost >= 60) {
+            uspesnostLabel.setForeground(new Color(255, 152, 0));
+        } else {
+            uspesnostLabel.setForeground(new Color(244, 67, 54));
+        }
+        return uspesnostLabel;
+    }
+
     /**
      * Vytvorí label pre detail
      */
@@ -153,7 +158,7 @@ public class VysledkyObrazovka extends JPanel {
 
         // Tlačidlo späť do menu
         JButton menuButton = ModerneButtonUI.vytvorModerneTlacidlo("Hlavné menu", new Color(59, 89, 152));
-        menuButton.addActionListener(e -> this.ovladac.zobrazHlavneMenu());
+        menuButton.addActionListener(_ -> this.ovladac.zobrazHlavneMenu());
 
         panel.add(menuButton);
 

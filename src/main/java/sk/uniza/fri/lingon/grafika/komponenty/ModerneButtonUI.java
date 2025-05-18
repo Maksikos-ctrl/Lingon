@@ -17,9 +17,9 @@ import java.awt.RenderingHints;
  * Vlastný štýl pre tlačidlá
  */
 public class ModerneButtonUI extends BasicButtonUI {
-    private Color pozadie;
-    private Color pozadieHover;
-    private Color pozadieStlacene;
+    private final Color pozadie;
+    private final Color pozadieHover;
+    private final Color pozadieStlacene;
 
     /**
      * Konštruktor pre moderné tlačidlo

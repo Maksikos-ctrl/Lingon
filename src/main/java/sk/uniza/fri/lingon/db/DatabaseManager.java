@@ -15,10 +15,16 @@ import sk.uniza.fri.lingon.core.VysledokTestu;
 import sk.uniza.fri.lingon.pouzivatel.Pouzivatel;
 
 /**
- * Správca databázy SQLite pre ukladanie histórie testov
+ * Správca databázy SQLite pre ukladanie histórie testov.
+ * Poskytuje metódy pre prácu s databázou, vrátane CRUD operácií
+ * pre výsledky testov a používateľov.
  */
 public class DatabaseManager {
+
+    /** Názov databázového súboru. */
     private static final String DB_NAME = "lingon_historia.db";
+
+    /** URL pre pripojenie k databáze. */
     private static final String DB_URL = "jdbc:sqlite:" + DB_NAME;
 
     static {
@@ -31,12 +37,13 @@ public class DatabaseManager {
     }
 
     /**
-     * Vytvorí tabuľky ak neexistujú
+     * Vytvorí tabuľky ak neexistujú.
+     * Inicializuje schému databázy a kontroluje existenciu stĺpcov.
      */
     private static void vytvorTabulky() {
         String sql = "CREATE TABLE IF NOT EXISTS historia (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "pouzivatel_email TEXT NOT NULL," + // Nový stĺpec pre email používateľa
+                "pouzivatel_email TEXT NOT NULL," +
                 "kategoria_nazov TEXT NOT NULL," +
                 "cas_ukoncenia TEXT NOT NULL," +
                 "pocet_otazok INTEGER NOT NULL," +
@@ -70,14 +77,48 @@ public class DatabaseManager {
     }
 
     /**
-     * Získa spojenie s databázou
+     * Získa spojenie s databázou.
+     *
+     * @return Spojenie (Connection) s databázou SQLite
+     * @throws SQLException ak nastane chyba pri pripojení k databáze
      */
     private static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(DB_URL);
     }
 
     /**
-     * Uloží výsledok testu
+     * Vytvorí a nakonfiguruje objekt VysledokTestu s danými parametrami.
+     * Extrahovanie spoločnej logiky pre odstránenie duplicitného kódu.
+     *
+     * @param kategoriaId ID kategórie testu
+     * @param kategoriaNazov názov kategórie testu
+     * @param pocetOtazok celkový počet otázok
+     * @param pouzivatelEmail email používateľa
+     * @param spravne počet správnych odpovedí
+     * @param nespravne počet nesprávnych odpovedí
+     * @return nakonfigurovaný objekt VysledokTestu
+     */
+    private static VysledokTestu vytvorVysledok(String kategoriaId, String kategoriaNazov,
+                                                int pocetOtazok, String pouzivatelEmail, int spravne, int nespravne) {
+        // Vytvoríme výsledok
+        VysledokTestu vysledok = new VysledokTestu(kategoriaId, kategoriaNazov, pocetOtazok);
+        vysledok.setPouzivatelEmail(pouzivatelEmail);
+
+        // Nastavíme správne a nesprávne odpovede
+        for (int i = 0; i < spravne; i++) {
+            vysledok.pridajSpravnuOdpoved();
+        }
+        for (int i = 0; i < nespravne; i++) {
+            vysledok.pridajNespravnuOdpoved();
+        }
+
+        return vysledok;
+    }
+
+    /**
+     * Uloží výsledok testu do databázy.
+     *
+     * @param vysledok výsledok testu na uloženie
      */
     public static void ulozVysledok(VysledokTestu vysledok) {
         String sql = "INSERT INTO historia (pouzivatel_email, kategoria_nazov, cas_ukoncenia, pocet_otazok, " +
@@ -98,7 +139,8 @@ public class DatabaseManager {
             pstmt.setDouble(7, vysledok.getUspesnost());
 
             pstmt.executeUpdate();
-            System.out.println("Výsledok testu uložený do databázy pre používateľa: " + vysledok.getPouzivatelEmail() + " v čase: " + casovaZnacka);
+            System.out.println("Výsledok testu uložený do databázy pre používateľa: " +
+                    vysledok.getPouzivatelEmail() + " v čase: " + casovaZnacka);
 
         } catch (SQLException e) {
             System.err.println("Chyba pri ukladaní do databázy: " + e.getMessage());
@@ -106,7 +148,10 @@ public class DatabaseManager {
     }
 
     /**
-     * Načíta históriu testov pre konkrétneho používateľa
+     * Načíta históriu testov pre konkrétneho používateľa.
+     *
+     * @param email email používateľa, ktorého história sa má načítať
+     * @return zoznam výsledkov testov pre daného používateľa
      */
     public static List<VysledokTestu> nacitajHistoriuPouzivatela(String email) {
         List<VysledokTestu> historia = new ArrayList<>();
@@ -125,17 +170,8 @@ public class DatabaseManager {
                 int spravne = rs.getInt("spravne_odpovede");
                 int nespravne = rs.getInt("nespravne_odpovede");
 
-                // Vytvoríme výsledok
-                VysledokTestu vysledok = new VysledokTestu("", kategoriaNazov, pocetOtazok);
-                vysledok.setPouzivatelEmail(email);
-
-                // Nastavíme správne a nesprávne odpovede
-                for (int i = 0; i < spravne; i++) {
-                    vysledok.pridajSpravnuOdpoved();
-                }
-                for (int i = 0; i < nespravne; i++) {
-                    vysledok.pridajNespravnuOdpoved();
-                }
+                // Použijeme pomocnú metódu namiesto duplicitného kódu
+                VysledokTestu vysledok = vytvorVysledok("", kategoriaNazov, pocetOtazok, email, spravne, nespravne);
 
                 // Nastavíme presný čas z databázy
                 try {
@@ -151,7 +187,8 @@ public class DatabaseManager {
                 historia.add(vysledok);
             }
 
-            System.out.println("Načítané " + historia.size() + " záznamov z databázy pre používateľa: " + email);
+            System.out.println("Načítané " + historia.size() +
+                    " záznamov z databázy pre používateľa: " + email);
 
         } catch (SQLException e) {
             System.err.println("Chyba pri čítaní z databázy: " + e.getMessage());
@@ -160,7 +197,12 @@ public class DatabaseManager {
         return historia;
     }
 
-    // Pomocná metóda na nastavenie času ukončenia
+    /**
+     * Pomocná metóda na nastavenie času ukončenia.
+     *
+     * @param vysledok výsledok testu, ktorému sa má nastaviť čas
+     * @param cas čas ukončenia, ktorý sa má nastaviť
+     */
     private static void setCasUkoncenia(VysledokTestu vysledok, LocalDateTime cas) {
         try {
             // Použitie reflexie pre prístup k privátnym poliam, keďže možno nemáme setter
@@ -178,7 +220,9 @@ public class DatabaseManager {
     }
 
     /**
-     * Načíta všetku históriu testov (ponecháme pre spätnú kompatibilitu)
+     * Načíta všetku históriu testov (ponecháme pre spätnú kompatibilitu).
+     *
+     * @return zoznam všetkých výsledkov testov
      */
     public static List<VysledokTestu> nacitajHistoriu() {
         List<VysledokTestu> historia = new ArrayList<>();
@@ -202,16 +246,9 @@ public class DatabaseManager {
                     // Stĺpec neexistuje, použijeme predvolenú hodnotu
                 }
 
-                VysledokTestu vysledok = new VysledokTestu("", kategoriaNazov, pocetOtazok);
-                vysledok.setPouzivatelEmail(pouzivatelEmail);
-
-                // Nastavíme hodnoty
-                for (int i = 0; i < spravne; i++) {
-                    vysledok.pridajSpravnuOdpoved();
-                }
-                for (int i = 0; i < nespravne; i++) {
-                    vysledok.pridajNespravnuOdpoved();
-                }
+                // Použijeme pomocnú metódu namiesto duplicitného kódu
+                VysledokTestu vysledok = vytvorVysledok("", kategoriaNazov, pocetOtazok,
+                        pouzivatelEmail, spravne, nespravne);
 
                 vysledok.ukonciTest();
                 historia.add(vysledok);
@@ -227,7 +264,9 @@ public class DatabaseManager {
     }
 
     /**
-     * Vymaže históriu testov konkrétneho používateľa
+     * Vymaže históriu testov konkrétneho používateľa.
+     *
+     * @param email email používateľa, ktorého história sa má vymazať
      */
     public static void vymazHistoriuPouzivatela(String email) {
         String sql = "DELETE FROM historia WHERE pouzivatel_email = ?";
@@ -245,7 +284,7 @@ public class DatabaseManager {
     }
 
     /**
-     * Vymaže všetky záznamy z histórie
+     * Vymaže všetky záznamy z histórie.
      */
     public static void vymazHistoriu() {
         String sql = "DELETE FROM historia";
@@ -262,7 +301,10 @@ public class DatabaseManager {
     }
 
     /**
-     * Kontroluje, či používateľ s daným emailom existuje v databáze
+     * Kontroluje, či používateľ s daným emailom existuje v databáze.
+     *
+     * @param email email používateľa na kontrolu
+     * @return true ak používateľ existuje, inak false
      */
     public static boolean existujePouzivatel(String email) {
         String sql = "SELECT COUNT(*) FROM pouzivatelia WHERE email = ?";
@@ -287,7 +329,7 @@ public class DatabaseManager {
     }
 
     /**
-     * Vytvorí tabuľku pre používateľov, ak neexistuje
+     * Vytvorí tabuľku pre používateľov, ak neexistuje.
      */
     private static void vytvorTabulkuPouzivatelia() {
         String sql = "CREATE TABLE IF NOT EXISTS pouzivatelia (" +
@@ -309,7 +351,10 @@ public class DatabaseManager {
     }
 
     /**
-     * Uloží používateľa do databázy
+     * Uloží používateľa do databázy.
+     *
+     * @param pouzivatel objekt používateľa, ktorý sa má uložiť
+     * @return true ak bolo uloženie úspešné, inak false
      */
     public static boolean ulozPouzivatela(Pouzivatel pouzivatel) {
         vytvorTabulkuPouzivatelia();
@@ -337,10 +382,10 @@ public class DatabaseManager {
     }
 
     /**
-     * Načíta používateľa z databázy podľa emailu
-     */
-    /**
-     * Načíta používateľa z databázy podľa emailu
+     * Načíta používateľa z databázy podľa emailu.
+     *
+     * @param email email používateľa, ktorý sa má načítať
+     * @return objekt používateľa alebo null ak používateľ neexistuje
      */
     public static Pouzivatel nacitajPouzivatela(String email) {
         vytvorTabulkuPouzivatelia(); // Uistíme sa, že tabuľka existuje
@@ -378,7 +423,10 @@ public class DatabaseManager {
     }
 
     /**
-     * Aktualizuje používateľa v databáze
+     * Aktualizuje používateľa v databáze.
+     *
+     * @param pouzivatel objekt používateľa, ktorý sa má aktualizovať
+     * @return true ak bola aktualizácia úspešná, inak false
      */
     public static boolean aktualizujPouzivatela(Pouzivatel pouzivatel) {
         vytvorTabulkuPouzivatelia(); // Uistíme sa, že tabuľka existuje
@@ -404,8 +452,4 @@ public class DatabaseManager {
             return false;
         }
     }
-
-
-
-
 }

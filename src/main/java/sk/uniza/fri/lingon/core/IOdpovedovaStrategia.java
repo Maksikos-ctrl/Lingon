@@ -14,9 +14,4 @@ public interface IOdpovedovaStrategia {
      */
     boolean validuj(String vstup, Object ocakavany);
 
-    /**
-     * Vrati nazov strategie
-     * @return Nazov strategie
-     */
-    String getNazovStrategie();
 }

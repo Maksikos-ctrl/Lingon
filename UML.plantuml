@@ -1,0 +1,378 @@
+@startuml
+!theme plain
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam nodesep 80
+skinparam ranksep 100
+
+package "sk.uniza.fri.lingon" {
+  package "core" {
+    interface "IZadanie" as IZadanie
+    abstract class "AbstractneZadanie" as AbstractneZadanie
+    class "KategoriaTrivia" as KategoriaTrivia
+    class "VysledokTestu" as VysledokTestu
+    interface "IOdpovedovaStrategia" as IOdpovedovaStrategia
+    class "PresnaZhodaStrategia" as PresnaZhodaStrategia
+    class "ObsahujeStrategia" as ObsahujeStrategia
+    class "NerozlisujucaStrategia" as NerozlisujucaStrategia
+    class "UIKontajner" as UIKontajner
+  }
+
+  package "db" {
+    class "DatabaseManager" as DatabaseManager
+    class "HistoriaManager" as HistoriaManager
+    class "OtazkyLoader" as OtazkyLoader
+  }
+
+  package "grafika" {
+    package "animacie" {
+      class "AnimovanyProgressBar" as AnimovanyProgressBar
+      class "NacitaciaAnimacie" as NacitaciaAnimacie
+      class "NacitaciaObrazovka" as NacitaciaObrazovka
+      class "NacitaciaScreenManager" as NacitaciaScreenManager
+    }
+
+    package "obrazovky" {
+      class "HlavneMenu" as HlavneMenu
+      class "HistoriaObrazovka" as HistoriaObrazovka
+      class "ProfilObrazovka" as ProfilObrazovka
+      class "UvodnaObrazovka" as UvodnaObrazovka
+      class "VysledkyObrazovka" as VysledkyObrazovka
+    }
+
+    package "spravcovia" {
+      class "SpravcaHistorie" as SpravcaHistorie
+      class "SpravcaKvizu" as SpravcaKvizu
+      class "SpravcaMenu" as SpravcaMenu
+      class "SpravcaObrazoviek" as SpravcaObrazoviek
+      class "SpravcaPouzivatela" as SpravcaPouzivatela
+      class "SpravcaXP" as SpravcaXP
+    }
+  }
+
+  package "pouzivatel" {
+    class "Pouzivatel" as Pouzivatel
+
+    package "lekcia" {
+      class "Lekcia" as Lekcia
+      class "ParovaciaOtazka" as ParovaciaOtazka
+      class "VpisovaciaOtazka" as VpisovaciaOtazka
+      class "VyberovaOtazka" as VyberovaOtazka
+    }
+  }
+}
+
+
+AbstractneZadanie ..|> IZadanie
+PresnaZhodaStrategia ..|> IOdpovedovaStrategia
+ObsahujeStrategia ..|> IOdpovedovaStrategia
+NerozlisujucaStrategia ..|> IOdpovedovaStrategia
+
+ParovaciaOtazka --|> AbstractneZadanie
+VpisovaciaOtazka --|> AbstractneZadanie
+VyberovaOtazka --|> AbstractneZadanie
+
+OtazkyLoader ..> IZadanie : vytvára
+DatabaseManager ..> VysledokTestu : používa
+DatabaseManager ..> Pouzivatel : používa
+
+SpravcaKvizu ..> IZadanie : používa
+SpravcaHistorie ..> VysledokTestu : spravuje
+SpravcaPouzivatela ..> Pouzivatel : spravuje
+
+
+
+
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam nodesep 80
+skinparam ranksep 100
+
+package "sk.uniza.fri.lingon.core" {
+  interface "IZadanie" as IZadanie {
+    +getText(): String
+    +zobrazGrafiku(UIKontajner): void
+    +skontrolujOdpoved(String): boolean
+    +getTypOtazky(): TypOtazky
+  }
+
+  abstract class "AbstractneZadanie" as AbstractneZadanie {
+    #String text
+    #String spravnaOdpoved
+    +AbstractneZadanie(String, String)
+    +getText(): String
+    +skontrolujOdpoved(String): boolean
+    {abstract} +zobrazGrafiku(UIKontajner): void
+  }
+
+  interface "IOdpovedovaStrategia" as IOdpovedovaStrategia {
+    +jeSpravnaOdpoved(String, String): boolean
+  }
+
+  class "PresnaZhodaStrategia" as PresnaZhodaStrategia {
+    +jeSpravnaOdpoved(String, String): boolean
+  }
+
+  class "ObsahujeStrategia" as ObsahujeStrategia {
+    +jeSpravnaOdpoved(String, String): boolean
+  }
+
+  class "NerozlisujucaStrategia" as NerozlisujucaStrategia {
+    +jeSpravnaOdpoved(String, String): boolean
+  }
+
+  enum "TypOtazky" as TypOtazky {
+    VYBEROVA
+    VPISOVACIA
+    PAROVACIA
+  }
+
+  class "UIKontajner" as UIKontajner {
+    +pridajKomponent(Component): void
+    +vymazKomponenty(): void
+  }
+}
+
+package "sk.uniza.fri.lingon.pouzivatel.lekcia" {
+  class "ParovaciaOtazka" as ParovaciaOtazka {
+    -Map<String, String> spravnePary
+    +ParovaciaOtazka(String, Map<String, String>)
+    +zobrazGrafiku(UIKontajner): void
+    +skontrolujOdpoved(String): boolean
+    +getTypOtazky(): TypOtazky
+  }
+
+  class "VpisovaciaOtazka" as VpisovaciaOtazka {
+    -IOdpovedovaStrategia strategia
+    +VpisovaciaOtazka(String, String)
+    +setStrategia(IOdpovedovaStrategia): void
+    +zobrazGrafiku(UIKontajner): void
+    +skontrolujOdpoved(String): boolean
+    +getTypOtazky(): TypOtazky
+  }
+
+  class "VyberovaOtazka" as VyberovaOtazka {
+    -List<String> moznosti
+    +VyberovaOtazka(String, List<String>, String)
+    +zobrazGrafiku(UIKontajner): void
+    +skontrolujOdpoved(String): boolean
+    +getTypOtazky(): TypOtazky
+  }
+}
+
+
+AbstractneZadanie ..|> IZadanie
+PresnaZhodaStrategia ..|> IOdpovedovaStrategia
+ObsahujeStrategia ..|> IOdpovedovaStrategia
+NerozlisujucaStrategia ..|> IOdpovedovaStrategia
+
+ParovaciaOtazka --|> AbstractneZadanie
+VpisovaciaOtazka --|> AbstractneZadanie
+VyberovaOtazka --|> AbstractneZadanie
+
+VpisovaciaOtazka o--> IOdpovedovaStrategia : používa
+
+
+
+
+
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam nodesep 80
+skinparam ranksep 100
+
+package "sk.uniza.fri.lingon.db" {
+  class "DatabaseManager" as DatabaseManager {
+    -static final String DB_NAME
+    -static final String DB_URL
+    +{static} getConnection(): Connection
+    +{static} ulozVysledok(VysledokTestu): void
+    +{static} nacitajHistoriuPouzivatela(String): List<VysledokTestu>
+    +{static} nacitajHistoriu(): List<VysledokTestu>
+    +{static} vymazHistoriuPouzivatela(String): void
+    +{static} vymazHistoriu(): void
+    +{static} existujePouzivatel(String): boolean
+    +{static} ulozPouzivatela(Pouzivatel): boolean
+    +{static} nacitajPouzivatela(String): Pouzivatel
+    +{static} aktualizujPouzivatela(Pouzivatel): boolean
+  }
+
+  class "HistoriaManager" as HistoriaManager {
+    +HistoriaManager(OvladacHlavnehoOkna)
+    +nacitajHistoriu(): List<VysledokTestu>
+    +nacitajHistoriuPouzivatela(): List<VysledokTestu>
+    +vymazHistoriu(): void
+    +zobrazHistoriu(): void
+  }
+
+  class "OtazkyLoader" as OtazkyLoader {
+    -static final Random RANDOM
+    -static final Set<String> POUZITE_OTAZKY
+    +{static} nacitajKategorie(): List<KategoriaTrivia>
+    +{static} nacitajOtazkyPreKategoriu(int): List<IZadanie>
+    +{static} nacitajOtazky(): List<IZadanie>
+    +{static} getDemoOtazky(): List<IZadanie>
+    -{static} getDataFromApi(String): String
+    -{static} decodeHtml(String): String
+  }
+}
+
+package "sk.uniza.fri.lingon.core" {
+  class "VysledokTestu" as VysledokTestu {
+    -String kategoriaId
+    -String kategoriaNazov
+    -int pocetOtazok
+    -int spravneOdpovede
+    -int nespravneOdpovede
+    -LocalDateTime casUkoncenia
+    -double uspesnost
+    +pridajSpravnuOdpoved(): void
+    +pridajNespravnuOdpoved(): void
+    +ukonciTest(): void
+  }
+
+  class "KategoriaTrivia" as KategoriaTrivia {
+    -int id
+    -String nazov
+    -Color farba
+  }
+
+  interface "IZadanie" as IZadanie
+}
+
+package "sk.uniza.fri.lingon.pouzivatel" {
+  class "Pouzivatel" as Pouzivatel {
+    -String meno
+    -String email
+    -int celkoveXP
+    -int spravneOdpovede
+    -int nespravneOdpovede
+    +getUroven(): int
+    +pridajXP(int): void
+  }
+}
+
+package "sk.uniza.fri.lingon.grafika.spravcovia" {
+  class "SpravcaHistorie" as SpravcaHistorie {
+    -OvladacHlavnehoOkna ovladac
+    -HistoriaManager historiaManager
+    +nacitajHistoriu(): List<VysledokTestu>
+    +zobrazHistoriu(): void
+  }
+}
+
+DatabaseManager ..> VysledokTestu
+DatabaseManager ..> Pouzivatel
+OtazkyLoader ..> KategoriaTrivia
+OtazkyLoader ..> IZadanie
+HistoriaManager ..> DatabaseManager
+HistoriaManager ..> VysledokTestu
+SpravcaHistorie o--> HistoriaManager
+
+
+
+
+
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam nodesep 80
+skinparam ranksep 100
+
+package "sk.uniza.fri.lingon.grafika" {
+  package "hlavny" {
+    class "OvladacHlavnehoOkna" as OvladacHlavnehoOkna {
+      -JFrame hlavneOkno
+      -SpravcaObrazoviek spravcaObrazoviek
+      -SpravcaPouzivatela spravcaPouzivatela
+      -SpravcaKvizu spravcaKvizu
+      -SpravcaXP spravcaXP
+      +getAktualnyPouzivatel(): Pouzivatel
+      +getSpravcaPouzivatela(): SpravcaPouzivatela
+      +getSpravcaKvizu(): SpravcaKvizu
+      +zobrazHistoriu(): void
+    }
+  }
+
+  package "obrazovky" {
+    class "HlavneMenu" as HlavneMenu {
+      -OvladacHlavnehoOkna ovladac
+      -List<KategoriaTrivia> kategorie
+      +paintComponent(Graphics)
+      -vytvorHornyPanel(): JPanel
+      -vytvorDolnyPanel(): JPanel
+      -nacitajKategorie(): void
+      -zobrazKategorie(): void
+    }
+
+    class "UvodnaObrazovka" as UvodnaObrazovka {
+      -OvladacHlavnehoOkna ovladac
+      -vytvorPrihlasovaciFormular(): JPanel
+      -vytvorRegistracnyFormular(): JPanel
+    }
+
+    class "ProfilObrazovka" as ProfilObrazovka
+    class "VysledkyObrazovka" as VysledkyObrazovka
+    class "HistoriaObrazovka" as HistoriaObrazovka
+  }
+
+  package "spravcovia" {
+    class "SpravcaObrazoviek" as SpravcaObrazoviek {
+      -JPanel obsahPanel
+      -CardLayout cardLayout
+      -Map<String, JPanel> obrazovky
+      +pridajObrazovku(String, JPanel): void
+      +zobrazObrazovku(String): void
+    }
+
+    class "SpravcaPouzivatela" as SpravcaPouzivatela {
+      -OvladacHlavnehoOkna ovladac
+      -Pouzivatel aktualnyPouzivatel
+      +prihlasenie(String, String): boolean
+      +registracia(String, String): boolean
+      +odhlasenie(): void
+      +zobrazProfilPouzivatela(): void
+    }
+
+    class "SpravcaKvizu" as SpravcaKvizu
+    class "SpravcaXP" as SpravcaXP
+  }
+
+  package "animacie" {
+    class "NacitaciaAnimacie" as NacitaciaAnimacie {
+      -JLabel statusLabel
+      -AnimovanyProgressBar progressBar
+      -JLabel percentLabel
+      +startTextAnimation(): void
+      +startProgressAnimation(): void
+      +stopAnimations(): void
+    }
+
+    class "AnimovanyProgressBar" as AnimovanyProgressBar {
+      -int hodnota
+      -Color barvaProgressu
+      +setValue(int): void
+      +getValue(): int
+      +start(): void
+      +stop(): void
+    }
+  }
+}
+
+OvladacHlavnehoOkna o--> SpravcaObrazoviek
+OvladacHlavnehoOkna o--> SpravcaPouzivatela
+OvladacHlavnehoOkna o--> SpravcaKvizu
+OvladacHlavnehoOkna o--> SpravcaXP
+
+SpravcaObrazoviek o--> HlavneMenu
+SpravcaObrazoviek o--> UvodnaObrazovka
+SpravcaObrazoviek o--> ProfilObrazovka
+SpravcaObrazoviek o--> VysledkyObrazovka
+SpravcaObrazoviek o--> HistoriaObrazovka
+
+HlavneMenu --> OvladacHlavnehoOkna
+UvodnaObrazovka --> OvladacHlavnehoOkna
+NacitaciaAnimacie --> AnimovanyProgressBar
+@enduml

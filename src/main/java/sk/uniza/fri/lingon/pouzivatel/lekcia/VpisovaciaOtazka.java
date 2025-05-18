@@ -28,7 +28,7 @@ import java.awt.RenderingHints;
  * Konkretna implementacia abstraktnej triedy AbstractneZadanie
  */
 public class VpisovaciaOtazka extends AbstractneZadanie {
-    private String spravnaOdpoved;
+    private final String spravnaOdpoved;
     private OdpovedDelegate odpovedDelegate;
 
     /**
@@ -77,50 +77,7 @@ public class VpisovaciaOtazka extends AbstractneZadanie {
         panel.setBackground(Color.WHITE);
 
         // Text otazky s ikonou
-        JPanel headerPanel = new JPanel(new BorderLayout(10, 0));
-        headerPanel.setOpaque(false);
-
-        // Ikona pera (jednoduchý štvorec s perom)
-        JPanel iconPanel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D)g.create();
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                int size = Math.min(getWidth(), getHeight()) - 4;
-                int x = (getWidth() - size) / 2;
-                int y = (getHeight() - size) / 2;
-
-                // Štvorec
-                g2d.setColor(new Color(233, 151, 0));
-                g2d.fillRoundRect(x, y, size, size, 6, 6);
-
-                // Pero ikona (jednoduchá)
-                g2d.setColor(Color.WHITE);
-                int penSize = size / 2;
-                int startX = x + (size - penSize) / 2;
-                int startY = y + (size - penSize) / 2;
-
-                g2d.setStroke(new BasicStroke(2));
-                g2d.drawLine(startX, startY + penSize, startX + penSize, startY);
-                g2d.drawLine(startX, startY + penSize, startX + penSize / 4, startY + penSize - penSize / 4);
-                g2d.drawLine(startX + penSize, startY, startX + penSize - penSize / 4, startY + penSize / 4);
-
-                g2d.dispose();
-            }
-
-            @Override
-            public Dimension getPreferredSize() {
-                return new Dimension(30, 30);
-            }
-        };
-        headerPanel.add(iconPanel, BorderLayout.WEST);
-
-        // Text otázky
-        JLabel otazkaLabel = new JLabel(this.getText());
-        otazkaLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        headerPanel.add(otazkaLabel, BorderLayout.CENTER);
+        JPanel headerPanel = this.getJPanel();
 
         panel.add(headerPanel, BorderLayout.NORTH);
 
@@ -146,7 +103,7 @@ public class VpisovaciaOtazka extends AbstractneZadanie {
         // Tlacidlo pre potvrdenie - použitie ModerneButtonUI
         JButton potvrditButton = ModerneButtonUI.vytvorModerneTlacidlo("Potvrdiť", new Color(76, 175, 80));
 
-        potvrditButton.addActionListener(e -> {
+        potvrditButton.addActionListener(_ -> {
             String odpoved = textField.getText();
             if (odpoved != null && !odpoved.trim().isEmpty()) {
                 boolean jeSpravna = this.skontrolujOdpoved(odpoved);
@@ -194,6 +151,54 @@ public class VpisovaciaOtazka extends AbstractneZadanie {
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
         kontajner.pridajKomponent(panel);
+    }
+
+    private JPanel getJPanel() {
+        JPanel headerPanel = new JPanel(new BorderLayout(10, 0));
+        headerPanel.setOpaque(false);
+
+        // Ikona pera (jednoduchý štvorec s perom)
+        JPanel iconPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D)g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                int size = Math.min(this.getWidth(), this.getHeight()) - 4;
+                int x = (this.getWidth() - size) / 2;
+                int y = (this.getHeight() - size) / 2;
+
+                // Štvorec
+                g2d.setColor(new Color(233, 151, 0));
+                g2d.fillRoundRect(x, y, size, size, 6, 6);
+
+                // Pero ikona (jednoduchá)
+                g2d.setColor(Color.WHITE);
+                int penSize = size / 2;
+                int startX = x + (size - penSize) / 2;
+                int startY = y + (size - penSize) / 2;
+
+                g2d.setStroke(new BasicStroke(2));
+                g2d.drawLine(startX, startY + penSize, startX + penSize, startY);
+                g2d.drawLine(startX, startY + penSize, startX + penSize / 4, startY + penSize - penSize / 4);
+                g2d.drawLine(startX + penSize, startY, startX + penSize - penSize / 4, startY + penSize / 4);
+
+                g2d.dispose();
+            }
+
+            @Override
+            public Dimension getPreferredSize() {
+                return new Dimension(30, 30);
+            }
+        };
+        headerPanel.add(iconPanel, BorderLayout.WEST);
+
+        // Text otázky
+        JLabel otazkaLabel = new JLabel(this.getText());
+        otazkaLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        headerPanel.add(otazkaLabel, BorderLayout.CENTER);
+        return headerPanel;
     }
 
     /**
