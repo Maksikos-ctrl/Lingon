@@ -100,6 +100,14 @@ public class VysledokTestu implements Serializable {
         return this.ulozeny;
     }
 
+    /**
+     * Nastaví čas ukončenia testu (pre načítanie z DB)
+     * @param casUkoncenia Čas ukončenia testu
+     */
+    public void setCasUkoncenia(LocalDateTime casUkoncenia) {
+        this.casUkoncenia = casUkoncenia;
+    }
+
     // Gettery
     public String getKategoriaId() {
         return this.kategoriaId;

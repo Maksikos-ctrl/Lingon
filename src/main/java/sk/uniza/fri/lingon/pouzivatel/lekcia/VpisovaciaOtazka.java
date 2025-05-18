@@ -4,6 +4,7 @@ import sk.uniza.fri.lingon.core.AbstractneZadanie;
 import sk.uniza.fri.lingon.core.OdpovedDelegate;
 import sk.uniza.fri.lingon.core.UIKontajner;
 import sk.uniza.fri.lingon.core.NerozlisujucaStrategia;
+import sk.uniza.fri.lingon.grafika.komponenty.ModerneButtonUI;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -29,6 +30,16 @@ import java.awt.RenderingHints;
 public class VpisovaciaOtazka extends AbstractneZadanie {
     private String spravnaOdpoved;
     private OdpovedDelegate odpovedDelegate;
+
+    /**
+     * Kontroluje, či otázka je vhodná pre vpisovaciu otázku
+     * @param text Text otázky
+     * @return true ak je otázka vhodná, false ak nie
+     */
+    public static boolean jeVhodnaOtazka(String text) {
+        // Ignorujeme otázky začínajúce na "Which"
+        return text != null && !text.trim().startsWith("Which");
+    }
 
     /**
      * Konstruktor pre vytvorenie novej vpisovacej otazky
@@ -132,12 +143,8 @@ public class VpisovaciaOtazka extends AbstractneZadanie {
 
         panel.add(vstupPanel, BorderLayout.CENTER);
 
-        // Tlacidlo pre potvrdenie
-        JButton potvrditButton = new JButton("Potvrdiť");
-        potvrditButton.setFont(new Font("Arial", Font.BOLD, 14));
-        potvrditButton.setBackground(new Color(76, 175, 80));
-        potvrditButton.setForeground(Color.WHITE);
-        potvrditButton.setFocusPainted(false);
+        // Tlacidlo pre potvrdenie - použitie ModerneButtonUI
+        JButton potvrditButton = ModerneButtonUI.vytvorModerneTlacidlo("Potvrdiť", new Color(76, 175, 80));
 
         potvrditButton.addActionListener(e -> {
             String odpoved = textField.getText();

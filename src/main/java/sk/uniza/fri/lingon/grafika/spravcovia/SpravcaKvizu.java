@@ -198,9 +198,11 @@ public class SpravcaKvizu {
         panel.setBackground(new Color(240, 240, 240));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
-        // Ľavá časť - tlačidlo do menu
+        // Ľavá časť - tlačidlo do menu (skryté počas testu)
         JButton menuButton = ModerneButtonUI.vytvorModerneTlacidlo("Späť do menu", new Color(59, 89, 152));
-        menuButton.addActionListener(e -> this.ovladac.zobrazHlavneMenu());
+        menuButton.setVisible(false); // Skryjeme tlačidlo počas testu
+
+        // menuButton.addActionListener(e -> ovladac.zobrazHlavneMenu());
 
         JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         leftPanel.setOpaque(false);
@@ -215,8 +217,7 @@ public class SpravcaKvizu {
             rightButton = ModerneButtonUI.vytvorModerneTlacidlo("Ukončiť kvíz", new Color(220, 53, 69));
             rightButton.addActionListener(e -> {
                 this.aktualnaOtazka++;  // Posunieme na koniec
-                this.ovladac.zobrazOtazku(); // Toto zobrazí výsledky
-                this.ukonciTest();
+                this.ukonciTest(); // Použijeme metódu ukonciTest namiesto priameho volania
             });
         } else {
             // Normálna otázka - tlačidlo ďalej

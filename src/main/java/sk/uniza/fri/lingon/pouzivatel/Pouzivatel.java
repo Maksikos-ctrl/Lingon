@@ -1,5 +1,6 @@
 package sk.uniza.fri.lingon.pouzivatel;
 
+import sk.uniza.fri.lingon.core.VysledokTestu;
 import sk.uniza.fri.lingon.gui.IZadanie;
 
 /**
@@ -123,6 +124,7 @@ public class Pouzivatel {
         return this.nespravneOdpovede;
     }
 
+
     /**
      * Vrati úspešnosť používateľa v percentách
      * @return Percentuálna úspešnosť
@@ -134,4 +136,44 @@ public class Pouzivatel {
         }
         return (int)((double)this.spravneOdpovede / celkovyPocet * 100);
     }
+
+    /**
+     * Aktualizuje úspešnosť na základe výsledku testu
+     * @param vysledok Výsledok testu
+     */
+    public void aktualizujUspesnost(VysledokTestu vysledok) {
+        // Pridáme správne a nesprávne odpovede z testu
+        this.spravneOdpovede += vysledok.getSpravneOdpovede();
+        this.nespravneOdpovede += vysledok.getNespravneOdpovede();
+
+        // Aktualizujeme aj XP (voliteľné)
+        this.pridajXP((int)vysledok.getUspesnost() / 10); // 10 XP za každých 100% úspešnosti
+    }
+
+    /**
+     * Nastavi XP body pouzivatela
+     * @param xp Hodnota XP bodov
+     */
+    public void setCelkoveXP(int xp) {
+        this.celkoveXP = xp;
+    }
+
+    /**
+     * Nastavi pocet spravnych odpovedi pouzivatela
+     * @param pocet Pocet spravnych odpovedi
+     */
+    public void setSpravneOdpovede(int pocet) {
+        this.spravneOdpovede = pocet;
+    }
+
+    /**
+     * Nastavi pocet nespravnych odpovedi pouzivatela
+     * @param pocet Pocet nespravnych odpovedi
+     */
+    public void setNespravneOdpovede(int pocet) {
+        this.nespravneOdpovede = pocet;
+    }
+
+
+
 }

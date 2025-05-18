@@ -1,6 +1,7 @@
 package sk.uniza.fri.lingon.grafika.spravcovia;
 
 import sk.uniza.fri.lingon.core.VysledokTestu;
+import sk.uniza.fri.lingon.db.DatabaseManager;
 import sk.uniza.fri.lingon.db.HistoriaManager;
 import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
 
@@ -46,8 +47,27 @@ public class SpravcaHistorie {
             }
 
             // Nastavíme email aktuálneho používateľa
-            if (this.ovladac.getAktualnyPouzivatel() != null) {
-                vysledok.setPouzivatelEmail(this.ovladac.getAktualnyPouzivatel().getEmail());
+            if (ovladac.getAktualnyPouzivatel() != null) {
+                vysledok.setPouzivatelEmail(ovladac.getAktualnyPouzivatel().getEmail());
+
+                // Aktualizujeme úspešnosť používateľa
+                ovladac.getAktualnyPouzivatel().pridajXP((int)(vysledok.getUspesnost() / 10));
+
+                // Aktualizujeme štatistiky
+                if (vysledok.getSpravneOdpovede() > 0) {
+                    ovladac.getAktualnyPouzivatel().setSpravneOdpovede(
+                            ovladac.getAktualnyPouzivatel().getSpravneOdpovede() + vysledok.getSpravneOdpovede()
+                    );
+                }
+
+                if (vysledok.getNespravneOdpovede() > 0) {
+                    ovladac.getAktualnyPouzivatel().setNespravneOdpovede(
+                            ovladac.getAktualnyPouzivatel().getNespravneOdpovede() + vysledok.getNespravneOdpovede()
+                    );
+                }
+
+                // Uložíme aktualizovaného používateľa do databázy
+                DatabaseManager.aktualizujPouzivatela(ovladac.getAktualnyPouzivatel());
             } else {
                 vysledok.setPouzivatelEmail("unknown");
             }

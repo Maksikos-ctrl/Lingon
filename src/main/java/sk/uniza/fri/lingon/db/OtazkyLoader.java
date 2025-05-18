@@ -18,9 +18,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * Trieda pre nacitanie otazok z JSON API.
@@ -32,6 +34,9 @@ public final class OtazkyLoader {
     private static final String API_BASE_URL = "https://opentdb.com/api.php";
     private static final String API_CATEGORIES_URL = "https://opentdb.com/api_category.php";
     private static final Random RANDOM = new Random();
+
+    // Množina pre uchovávanie už použitých textov otázok
+    private static final Set<String> pouziteOtazky = new HashSet<>();
 
     // Mapa farieb pre kategorie
     private static final Map<Integer, Color> CATEGORY_COLORS = new HashMap<>();
@@ -68,6 +73,14 @@ public final class OtazkyLoader {
     }
 
     /**
+     * Vyčistí zoznam použitých otázok
+     */
+    public static void vycistiPouziteOtazky() {
+        pouziteOtazky.clear();
+    }
+
+
+    /**
      * Nacita kategorie z API.
      * @return Zoznam kategorii
      * @throws IOException ak nastane chyba pri komunikacii s API
@@ -96,7 +109,7 @@ public final class OtazkyLoader {
      * @throws IOException ak nastane chyba pri komunikacii s API
      */
     public static List<IZadanie> nacitajOtazkyPreKategoriu(int kategoriaId) throws IOException {
-        String url = API_BASE_URL + "?amount=10&category=" + kategoriaId + "&type=multiple";
+        String url = API_BASE_URL + "?amount=15&category=" + kategoriaId + "&type=multiple";
         return nacitajOtazkyZUrl(url);
     }
 
@@ -106,8 +119,23 @@ public final class OtazkyLoader {
      * @throws IOException ak nastane chyba pri komunikacii s API
      */
     public static List<IZadanie> nacitajOtazky() throws IOException {
-        String url = API_BASE_URL + "?amount=10&type=multiple";
+        String url = API_BASE_URL + "?amount=15&type=multiple";
         return nacitajOtazkyZUrl(url);
+    }
+
+    /**
+     * Kontroluje, či je otázka vhodná pre všetky typy otázok
+     * @param textOtazky Text otázky
+     * @return true ak je otázka vhodná, false ak nie
+     */
+    private static boolean jeVhodnaOtazka(String textOtazky) {
+        // Ak je otázka už použitá, nie je vhodná
+        if (pouziteOtazky.contains(textOtazky)) {
+            return false;
+        }
+
+        // Otázky s príliš dlhým textom nie sú vhodné pre párovanie
+        return textOtazky.length() <= 150;
     }
 
     /**
@@ -122,12 +150,36 @@ public final class OtazkyLoader {
         JSONObject root = new JSONObject(jsonData);
         JSONArray results = root.getJSONArray("results");
 
+        // Vytvoriť zoznam všetkých textov otázok a odpovedí z výsledkov
+        List<JSONObject> vsetkyOtazky = new ArrayList<>();
         for (int i = 0; i < results.length(); i++) {
             JSONObject item = results.getJSONObject(i);
             String text = decodeHtml(item.getString("question"));
+
+            // Kontrola, či nebola otázka už použitá
+            if (!pouziteOtazky.contains(text) && jeVhodnaOtazka(text)) {
+                vsetkyOtazky.add(item);
+                pouziteOtazky.add(text); // Označíme otázku ako použitú
+            }
+        }
+
+        // Vytvoriť maximálne 10 otázok
+        int pocetOtazok = Math.min(10, vsetkyOtazky.size());
+        for (int i = 0; i < pocetOtazok; i++) {
+            JSONObject item = vsetkyOtazky.get(i);
+            String text = decodeHtml(item.getString("question"));
             String spravnaOdpoved = decodeHtml(item.getString("correct_answer"));
+
+            // Pre VpisovaciaOtazka skontrolujeme, či nejde o "Which" otázku
             int typOtazky = RANDOM.nextInt(3); // 0, 1, 2 = 3 typy otazok
 
+            if (typOtazky == 1 && !VpisovaciaOtazka.jeVhodnaOtazka(text)) {
+                // Ak otázka začína "Which" a mal by to byť typ VpisovaciaOtazka,
+                // zmeníme typ na VyberovaOtazka
+                typOtazky = 0;
+            }
+
+            // Vytvorenie otázky podľa typu
             switch (typOtazky) {
                 case 0:
                     otazky.add(createVyberovaOtazka(item, text, spravnaOdpoved));
@@ -136,7 +188,7 @@ public final class OtazkyLoader {
                     otazky.add(createVpisovaciaOtazka(text, spravnaOdpoved));
                     break;
                 case 2:
-                    otazky.add(createParovaciaOtazka(results, text, spravnaOdpoved, i));
+                    otazky.add(createParovaciaOtazka(vsetkyOtazky, text, spravnaOdpoved, i));
                     break;
                 default:
                     break;
@@ -166,52 +218,49 @@ public final class OtazkyLoader {
         return vpisovaciaOtazka;
     }
 
-    private static ParovaciaOtazka createParovaciaOtazka(JSONArray results, String text,
+    private static ParovaciaOtazka createParovaciaOtazka(List<JSONObject> vsetkyOtazky, String text,
                                                          String spravnaOdpoved, int currentIndex) {
         Map<String, String> pary = new HashMap<>();
-        pary.put(text, spravnaOdpoved);
+        pary.put(skratText(text), spravnaOdpoved);
 
-        int countPairs = Math.min(3, results.length() - 1);
+        int countPairs = Math.min(3, vsetkyOtazky.size() - 1);
         List<Integer> usedIndexes = new ArrayList<>();
         usedIndexes.add(currentIndex);
 
-        while (pary.size() < 4 && usedIndexes.size() < results.length()) {
-            int randomIndex = RANDOM.nextInt(results.length());
+        while (pary.size() < 4 && usedIndexes.size() < vsetkyOtazky.size()) {
+            int randomIndex = RANDOM.nextInt(vsetkyOtazky.size());
             if (!usedIndexes.contains(randomIndex)) {
                 usedIndexes.add(randomIndex);
-                JSONObject pairItem = results.getJSONObject(randomIndex);
+                JSONObject pairItem = vsetkyOtazky.get(randomIndex);
                 String pairQuestion = decodeHtml(pairItem.getString("question"));
                 String pairAnswer = decodeHtml(pairItem.getString("correct_answer"));
 
-                if (pairQuestion.length() > 50) {
-                    pairQuestion = pairQuestion.substring(0, 47) + "...";
-                }
-
-                pary.put(pairQuestion, pairAnswer);
+                pary.put(skratText(pairQuestion), pairAnswer);
             }
         }
 
-        addDummyPairsIfNeeded(pary);
         return new ParovaciaOtazka("Spárujte správne dvojice:", pary);
     }
 
-    private static void addDummyPairsIfNeeded(Map<String, String> pary) {
-        String[] dummyQuestions = {
-                "Hlavné mesto Slovenska",
-                "Hlavné mesto Česka",
-                "Hlavné mesto Francúzska"
-        };
+    /**
+     * Skracuje text pre párovanie a upravuje ho pre lepšie zobrazenie
+     */
+    private static String skratText(String text) {
+        // Odstránime HTML tagy a zbytočné biele znaky
+        text = text.replaceAll("<[^>]*>", "").trim();
 
-        String[] dummyAnswers = {
-                "Bratislava",
-                "Praha",
-                "Paríž"
-        };
-
-        for (int j = 0; j < dummyQuestions.length && pary.size() < 4; j++) {
-            pary.put(dummyQuestions[j], dummyAnswers[j]);
+        // Skrátime text, ak je príliš dlhý
+        if (text.length() > 80) {
+            // Skúsime nájsť vhodné miesto na zalamenie (napr. medzera)
+            int cutIndex = text.lastIndexOf(' ', 77);
+            if (cutIndex > 50) {
+                return text.substring(0, cutIndex) + "...";
+            }
+            return text.substring(0, 77) + "...";
         }
+        return text;
     }
+
 
     /**
      * Nacita demo otazky (pre pripad, ze API nie je dostupne).

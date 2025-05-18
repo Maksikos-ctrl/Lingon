@@ -2,9 +2,7 @@ package sk.uniza.fri.lingon;
 
 import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
 
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
+import javax.swing.*;
 import java.awt.Dimension;
 
 /**
@@ -35,10 +33,19 @@ public class Main {
      */
     private static void vytvorGUI() {
         // Vytvorenie hlavneho okna
-        JFrame hlavneOkno = new JFrame("Lingon - Učenie jazykov");
+        JFrame hlavneOkno = new JFrame("Lingon");
         hlavneOkno.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         hlavneOkno.setSize(800, 600);
         hlavneOkno.setMinimumSize(new Dimension(640, 480));
+
+        // Nastavenie ikony aplikácie
+        try {
+            // Načítaj ikonu z resources
+            ImageIcon icon = new ImageIcon(Main.class.getResource("/images/icon.png"));
+            hlavneOkno.setIconImage(icon.getImage());
+        } catch (Exception e) {
+            System.err.println("Nepodarilo sa načítať ikonu: " + e.getMessage());
+        }
 
         // Vytvorenie a nastavenie ovladaca hlavneho okna
         OvladacHlavnehoOkna ovladac = new OvladacHlavnehoOkna(hlavneOkno);

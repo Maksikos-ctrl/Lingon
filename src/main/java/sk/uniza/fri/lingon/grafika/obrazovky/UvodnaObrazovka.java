@@ -2,25 +2,11 @@ package sk.uniza.fri.lingon.grafika.obrazovky;
 
 import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.*;
 import javax.swing.plaf.basic.BasicButtonUI;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
  * Úvodná obrazovka aplikácie
@@ -43,25 +29,135 @@ public class UvodnaObrazovka extends JPanel {
      * Inicializuje užívateľské rozhranie
      */
     private void inicializujUI() {
-        // Stredový panel
-        JPanel centerPanel = new JPanel();
-        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
-        centerPanel.setBorder(BorderFactory.createEmptyBorder(80, 50, 80, 50));
-        centerPanel.setOpaque(false);
+        setLayout(new BorderLayout());
 
-        // Logo panel
-        JPanel logoPanel = this.vytvorLogoPanel();
-        centerPanel.add(logoPanel);
-        centerPanel.add(Box.createVerticalStrut(70));
+        // Panel pre centrálny obsah
+        JPanel contentPanel = new JPanel(new GridBagLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D)g.create();
 
-        // Play tlačidlo
-        JButton hratButton = this.vytvorPlayButton();
-        centerPanel.add(hratButton);
+                // Vytvorenie gradientu
+                int w = getWidth();
+                int h = getHeight();
 
-        add(centerPanel, BorderLayout.CENTER);
+                // Animovaný gradient s časom
+                long time = System.currentTimeMillis() % 10000L;  // 10-sekundový cyklus
+                float ratio = (float) time / 10000f;
 
-        // Footer
-        JPanel footerPanel = this.vytvorFooter();
+                // Farby pre gradient (rôzne odtiene modrej)
+                Color color1 = new Color(41, 65, 114);  // Tmavá modrá
+                Color color2 = new Color(65, 105, 225); // Kráľovská modrá
+                Color color3 = new Color(100, 149, 237); // Kukličková modrá
+
+                // Vypočítame pozíciu stredu gradientu, ktorá sa pohybuje
+                float centerX = w * 0.5f + (float) Math.sin(ratio * 2 * Math.PI) * w * 0.3f;
+                float centerY = h * 0.5f + (float) Math.cos(ratio * 2 * Math.PI) * h * 0.3f;
+
+                // Vytvorenie radiálneho gradientu
+                RadialGradientPaint paint = new RadialGradientPaint(
+                        centerX, centerY, Math.max(w, h) * 0.8f,
+                        new float[]{0f, 0.5f, 1.0f},
+                        new Color[]{color2, color1, color3}
+                );
+
+                g2d.setPaint(paint);
+                g2d.fillRect(0, 0, w, h);
+
+                // Pridajte vzor (sieť) cez gradient
+                g2d.setColor(new Color(255, 255, 255, 20)); // Biela s priehľadnosťou
+                int gridSize = 30;
+
+                for (int i = 0; i < w; i += gridSize) {
+                    g2d.drawLine(i, 0, i, h);
+                }
+
+                for (int i = 0; i < h; i += gridSize) {
+                    g2d.drawLine(0, i, w, i);
+                }
+
+                g2d.dispose();
+            }
+        };
+        contentPanel.setOpaque(false);
+
+        // Nastavenie repaintu pre animáciu
+        Timer animationTimer = new Timer(50, e -> contentPanel.repaint());
+        animationTimer.start();
+
+        // Logo a nadpis
+        JPanel logoPanel = new JPanel(new GridBagLayout());
+        logoPanel.setOpaque(false);
+
+        JLabel titleLabel = new JLabel("LINGON");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 72));
+        titleLabel.setForeground(Color.WHITE);
+
+        JLabel subtitleLabel = new JLabel("Interaktívne kvízy");
+        subtitleLabel.setFont(new Font("Arial", Font.ITALIC, 32));
+        subtitleLabel.setForeground(new Color(255, 255, 255, 200));
+
+        // Nastavenie rozloženia
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(10, 0, 10, 0);
+        logoPanel.add(titleLabel, gbc);
+
+        gbc.gridy = 1;
+        logoPanel.add(subtitleLabel, gbc);
+
+        // Tlačidlo PLAY s animáciou
+        JButton playButton = new JButton("PLAY");
+        playButton.setFont(new Font("Arial", Font.BOLD, 24));
+        playButton.setForeground(Color.WHITE);
+        playButton.setBackground(new Color(76, 175, 80));
+        playButton.setFocusPainted(false);
+        playButton.setBorderPainted(false);
+        playButton.setPreferredSize(new Dimension(200, 60));
+        playButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Efekt prechodov
+        playButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                playButton.setBackground(new Color(46, 145, 50));
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                playButton.setBackground(new Color(76, 175, 80));
+            }
+        });
+
+        // Akcia po kliknutí
+        playButton.addActionListener(e -> {
+            if (ovladac.getAktualnyPouzivatel() == null) {
+                ovladac.getSpravcaPouzivatela().zobrazDialogNovehoPouzivatela();
+            } else {
+                ovladac.zobrazHlavneMenu();
+            }
+        });
+
+        // Pridanie komponentov do panelu
+        gbc.gridy = 2;
+        gbc.insets = new Insets(40, 0, 0, 0);
+        logoPanel.add(playButton, gbc);
+
+        contentPanel.add(logoPanel);
+        add(contentPanel, BorderLayout.CENTER);
+
+        // Copyright v päte
+        JLabel copyrightLabel = new JLabel("© 2025 Lingon - Projekt pre interaktívne kvízy");
+        copyrightLabel.setForeground(new Color(255, 255, 255, 150));
+        copyrightLabel.setHorizontalAlignment(JLabel.CENTER);
+        copyrightLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+
+        JPanel footerPanel = new JPanel(new BorderLayout());
+        footerPanel.setOpaque(false);
+        footerPanel.add(copyrightLabel, BorderLayout.CENTER);
+
         add(footerPanel, BorderLayout.SOUTH);
     }
 

@@ -1,5 +1,6 @@
 package sk.uniza.fri.lingon.grafika.spravcovia;
 
+import sk.uniza.fri.lingon.db.DatabaseManager;
 import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
 import sk.uniza.fri.lingon.grafika.obrazovky.ProfilObrazovka;
 import sk.uniza.fri.lingon.pouzivatel.Pouzivatel;
@@ -9,7 +10,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import java.awt.GridLayout;
+import java.awt.*;
 
 /**
  * Správca používateľov
@@ -54,18 +55,71 @@ public class SpravcaPouzivatela {
             String meno = menoField.getText().trim();
             String email = emailField.getText().trim();
 
-            if (!meno.isEmpty() && !email.isEmpty()) {
-                this.aktualnyPouzivatel = new Pouzivatel(meno, email);
-                this.ovladac.zobrazHlavneMenu();
-            } else {
+            // Validácia
+            if (meno.isEmpty() || email.isEmpty()) {
                 JOptionPane.showMessageDialog(
                         this.ovladac.getHlavneOkno(),
                         "Prosím, vyplňte meno a email.",
                         "Chyba",
                         JOptionPane.ERROR_MESSAGE
                 );
+                zobrazDialogNovehoPouzivatela(); // Zobrazíme dialóg znova
+                return;
+            }
+
+            // Kontrola formátu emailu pomocou regulárneho výrazu
+            if (!jeEmailValidy(email)) {
+                JOptionPane.showMessageDialog(
+                        this.ovladac.getHlavneOkno(),
+                        "Zadajte platný email.",
+                        "Chyba",
+                        JOptionPane.ERROR_MESSAGE
+                );
+                zobrazDialogNovehoPouzivatela(); // Zobrazíme dialóg znova
+                return;
+            }
+
+            // Kontrola existencie používateľa
+            Pouzivatel existujuciPouzivatel = DatabaseManager.nacitajPouzivatela(email);
+
+            if (existujuciPouzivatel != null) {
+                // Používateľ existuje
+                int odpoved = JOptionPane.showConfirmDialog(
+                        this.ovladac.getHlavneOkno(),
+                        "Používateľ s týmto emailom už existuje.\nChcete sa prihlásiť ako " +
+                                existujuciPouzivatel.getMeno() + "?",
+                        "Používateľ existuje",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE
+                );
+
+                if (odpoved == JOptionPane.YES_OPTION) {
+                    // Prihlásenie
+                    this.aktualnyPouzivatel = existujuciPouzivatel;
+                    this.ovladac.zobrazHlavneMenu();
+                    return;
+                } else {
+                    // Zrušiť a zobraziť dialóg znova
+                    zobrazDialogNovehoPouzivatela();
+                    return;
+                }
+            } else {
+                // Vytvorenie a uloženie nového používateľa
+                this.aktualnyPouzivatel = new Pouzivatel(meno, email);
+                DatabaseManager.ulozPouzivatela(this.aktualnyPouzivatel);
+                this.ovladac.zobrazHlavneMenu();
             }
         }
+    }
+
+    /**
+     * Kontroluje, či je email validný
+     * @param email Email na kontrolu
+     * @return true ak je email validný, inak false
+     */
+    private boolean jeEmailValidy(String email) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        return email.matches(emailRegex);
     }
 
     /**

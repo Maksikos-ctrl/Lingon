@@ -17,6 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
+import javax.swing.Timer;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -29,6 +30,7 @@ import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.RadialGradientPaint;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -55,6 +57,10 @@ public class HlavneMenu extends JPanel {
 
         this.inicializujUI();
         this.nacitajKategorie();
+
+        // Pridáme timer pre animáciu pozadia
+        Timer animationTimer = new Timer(50, e -> repaint());
+        animationTimer.start();
     }
 
     /**
@@ -62,7 +68,7 @@ public class HlavneMenu extends JPanel {
      */
     private void inicializujUI() {
         // Horny panel s nadpisom
-        JPanel hornyPanel =  this.vytvorHornyPanel();
+        JPanel hornyPanel = this.vytvorHornyPanel();
         add(hornyPanel, BorderLayout.NORTH);
 
         // Stredny panel pre kategorie (zatial prazdny)
@@ -155,7 +161,7 @@ public class HlavneMenu extends JPanel {
 
         // Ľavá časť - copyright
         JLabel footerLabel = new JLabel("© 2025 Lingon");
-        footerLabel.setForeground(new Color(100, 100, 100));
+        footerLabel.setForeground(Color.WHITE);
         panel.add(footerLabel, BorderLayout.WEST);
 
         // Stredná časť - tlačidlo pre históriu
@@ -185,6 +191,7 @@ public class HlavneMenu extends JPanel {
         JLabel loadingLabel = new JLabel("Načítavam kategórie...");
         loadingLabel.setFont(new Font("Arial", Font.PLAIN, 18));
         loadingLabel.setHorizontalAlignment(JLabel.CENTER);
+        loadingLabel.setForeground(Color.WHITE);
 
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
@@ -238,7 +245,7 @@ public class HlavneMenu extends JPanel {
 
         // Vytvorime panel pre kategorie
         JPanel kategoriePanel = new JPanel(new GridBagLayout());
-        kategoriePanel.setOpaque(false);
+        kategoriePanel.setOpaque(false); // Nastavíme na priehľadné pre viditeľnosť gradientu
         kategoriePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -315,24 +322,81 @@ public class HlavneMenu extends JPanel {
 
         karta.add(nazovLabel, BorderLayout.CENTER);
 
-        // Hover efekt
-        karta.addMouseListener(new MouseAdapter() {
+        // Opravený hover efekt
+        MouseAdapter hoverEffectAdapter = new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
                 karta.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
+                karta.repaint();
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
                 karta.setBorder(null);
+                karta.repaint();
             }
 
             @Override
             public void mouseClicked(MouseEvent e) {
                 HlavneMenu.this.ovladac.getSpravcaKvizu().spustiKvizPreKategoriu(kategoria);
             }
-        });
+        };
+
+        // Pridáme mouseLister priamo ku karte aj všetkým jej komponentom
+        karta.addMouseListener(hoverEffectAdapter);
+        nazovLabel.addMouseListener(hoverEffectAdapter);
 
         return karta;
+    }
+
+    /**
+     * Prekreslí pozadie s animovaným gradientom
+     */
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D)g.create();
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+
+        int w = getWidth();
+        int h = getHeight();
+
+        // Animovaný gradient s časom
+        long time = System.currentTimeMillis() % 15000L;  // 15-sekundový cyklus
+        float ratio = (float)time / 15000f;
+
+        // Farby pre gradient (odtiene modrej a fialovej)
+        Color color1 = new Color(41, 65, 114);  // Tmavá modrá
+        Color color2 = new Color(100, 80, 180); // Fialová
+        Color color3 = new Color(60, 120, 190); // Svetlá modrá
+
+        // Vypočítame pozíciu stredu gradientu, ktorá sa pohybuje
+        float centerX = w * 0.5f + (float)Math.sin(ratio * 2 * Math.PI) * w * 0.3f;
+        float centerY = h * 0.5f + (float)Math.cos(ratio * 2 * Math.PI) * h * 0.3f;
+
+        // Vytvorenie radiálneho gradientu
+        RadialGradientPaint paint = new RadialGradientPaint(
+                centerX, centerY, Math.max(w, h) * 0.8f,
+                new float[]{0f, 0.5f, 1.0f},
+                new Color[]{color2, color1, color3}
+        );
+
+        g2d.setPaint(paint);
+        g2d.fillRect(0, 0, w, h);
+
+        // Pridajte vzor (sieť) cez gradient
+        g2d.setColor(new Color(255, 255, 255, 10)); // Biela s priehľadnosťou
+        int gridSize = 40;
+
+        for (int i = 0; i < w; i += gridSize) {
+            g2d.drawLine(i, 0, i, h);
+        }
+
+        for (int i = 0; i < h; i += gridSize) {
+            g2d.drawLine(0, i, w, i);
+        }
+
+        g2d.dispose();
     }
 }

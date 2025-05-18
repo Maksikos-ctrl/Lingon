@@ -4,6 +4,7 @@ import sk.uniza.fri.lingon.core.AbstractneZadanie;
 import sk.uniza.fri.lingon.core.UIKontajner;
 import sk.uniza.fri.lingon.core.PresnaZhodaStrategia;
 import sk.uniza.fri.lingon.core.OdpovedDelegate;
+import sk.uniza.fri.lingon.grafika.komponenty.ModerneButtonUI;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -24,12 +25,10 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GridLayout;
 import java.awt.RenderingHints;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.List;
 import java.util.Map;
 
@@ -156,10 +155,11 @@ public class ParovaciaOtazka extends AbstractneZadanie {
 
         panel.add(headerPanel, BorderLayout.NORTH);
 
-        // Panel s parmi
-        JPanel paryPanel = new JPanel(new GridLayout(0, 2, 10, 10));
+        // Panel s parmi - zmena na BoxLayout pre lepšie zobrazenie
+        JPanel paryPanel = new JPanel();
+        paryPanel.setLayout(new BoxLayout(paryPanel, BoxLayout.Y_AXIS));
         paryPanel.setOpaque(false);
-        paryPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        paryPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         // Priprava zoznamu vsetkych hodnot pre dropdown
         List<String> vsetkyHodnoty = new ArrayList<>(this.spravnePary.values());
@@ -173,21 +173,73 @@ public class ParovaciaOtazka extends AbstractneZadanie {
         Collections.shuffle(kluce);
 
         for (String kluc : kluce) {
-            // Label pre kluc
-            JLabel klucLabel = new JLabel(kluc);
-            klucLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-            klucLabel.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)),
-                    BorderFactory.createEmptyBorder(5, 5, 5, 5)
-            ));
-            paryPanel.add(klucLabel);
+            // Panel pre jeden pár (otázka + odpoveď)
+            JPanel parPanel = new JPanel(new BorderLayout(10, 5));
+            parPanel.setOpaque(false);
+            parPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 15, 0));
 
-            // Dropdown pre vyber hodnoty
+            // Zistíme optimálnu veľkosť písma pre dlhý text
+            int fontSizeKluc = 14;
+            if (kluc.length() > 40) {
+                fontSizeKluc = 12;
+            } else if (kluc.length() > 60) {
+                fontSizeKluc = 11;
+            }
+
+            // Label pre kluc - s úpravou pre dlhšie texty
+            JLabel klucLabel = new JLabel();
+            klucLabel.setText("<html><div style='width: 550px; padding: 5px;'>" + kluc + "</div></html>");
+            klucLabel.setFont(new Font("Arial", Font.PLAIN, fontSizeKluc));
+            klucLabel.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(1, 1, 1, 1, new Color(126, 87, 194, 80)),
+                    BorderFactory.createEmptyBorder(10, 10, 10, 10)
+            ));
+            klucLabel.setBackground(new Color(245, 245, 250));
+            klucLabel.setOpaque(true);
+            klucLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            parPanel.add(klucLabel, BorderLayout.CENTER);
+
+            // Dropdown pre vyber hodnoty - vylepšený
             JComboBox<String> hodnotaComboBox = new JComboBox<>(vsetkyHodnoty.toArray(new String[0]));
             hodnotaComboBox.setFont(new Font("Arial", Font.PLAIN, 14));
             hodnotaComboBox.setSelectedIndex(-1); // Ziadna predvolena hodnota
             hodnotaComboBox.setBackground(Color.WHITE);
-            paryPanel.add(hodnotaComboBox);
+            hodnotaComboBox.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(1, 1, 1, 1, new Color(126, 87, 194)),
+                    BorderFactory.createEmptyBorder(5, 5, 5, 5)
+            ));
+            hodnotaComboBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+            hodnotaComboBox.setPreferredSize(new Dimension(200, 35));
+
+            // Nastavenie vzhľadu pre dropdown
+            hodnotaComboBox.setRenderer(new javax.swing.DefaultListCellRenderer() {
+                @Override
+                public Component getListCellRendererComponent(javax.swing.JList<?> list, Object value, int index,
+                                                              boolean isSelected, boolean cellHasFocus) {
+                    super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                    setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
+                    if (isSelected) {
+                        setBackground(new Color(126, 87, 194));
+                        setForeground(Color.WHITE);
+                    } else {
+                        setBackground(Color.WHITE);
+                        setForeground(Color.BLACK);
+                    }
+
+                    return this;
+                }
+            });
+
+            JPanel comboBoxPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            comboBoxPanel.setOpaque(false);
+            comboBoxPanel.add(hodnotaComboBox);
+
+            parPanel.add(comboBoxPanel, BorderLayout.EAST);
+
+            // Pridanie celého páru do hlavného panelu
+            paryPanel.add(parPanel);
 
             // Ulozenie referencie na UI prvok pre neskoršiu kontrolu
             this.uiPrvkyNaPojmy.put(hodnotaComboBox, kluc);
@@ -199,12 +251,8 @@ public class ParovaciaOtazka extends AbstractneZadanie {
         scrollPane.getViewport().setOpaque(false);
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        // Tlacidlo pre potvrdenie
-        JButton potvrditButton = new JButton("Potvrdiť");
-        potvrditButton.setFont(new Font("Arial", Font.BOLD, 14));
-        potvrditButton.setBackground(new Color(76, 175, 80));
-        potvrditButton.setForeground(Color.WHITE);
-        potvrditButton.setFocusPainted(false);
+        // Tlacidlo pre potvrdenie - použitie ModerneButtonUI
+        JButton potvrditButton = ModerneButtonUI.vytvorModerneTlacidlo("Potvrdiť", new Color(76, 175, 80));
 
         potvrditButton.addActionListener(e -> {
             // Ziskanie odpovedi od uzivatela
@@ -257,7 +305,8 @@ public class ParovaciaOtazka extends AbstractneZadanie {
                         comboBox.setForeground(new Color(244, 67, 54));
 
                         // Pridanie informácie o správnej odpovedi
-                        JLabel spravnaLabel = new JLabel(kluc + " = " + spravnaHodnota + " (správne)");
+                        JLabel spravnaLabel = new JLabel();
+                        spravnaLabel.setText("<html><div style='width: 450px;'>" + kluc + " = " + spravnaHodnota + " (správne)</div></html>");
                         spravnaLabel.setForeground(new Color(76, 175, 80));
                         spravnaLabel.setFont(new Font("Arial", Font.BOLD, 12));
                         spravnaLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
