@@ -19,6 +19,29 @@ sk/
 # JavaDoc
 javadocs/
 
+# Firebase credentials
+firebase-service-account.json
+firebase-config.json
+google-services.json
+
+
+# Database files
+*.db
+*.mv.db
+*.trace.db
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# Build files
+build/
+out/
+*.jar
+
+
+
 
 ### Eclipse ###
 .apt_generated
