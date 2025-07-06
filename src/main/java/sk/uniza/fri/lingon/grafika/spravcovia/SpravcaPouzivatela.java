@@ -129,11 +129,32 @@ public class SpravcaPouzivatela {
     }
 
     /**
+     * 🔄 Obnoví aktuálneho používateľa z databázy (po testoch, aktualizáciách)
+     */
+    public void obnovAktualnehoPozivatela() {
+        if (this.aktualnyPouzivatel != null) {
+            String email = this.aktualnyPouzivatel.getEmail();
+            Pouzivatel obnovenyPouzivatel = DatabaseManager.nacitajPouzivatela(email);
+
+            if (obnovenyPouzivatel != null) {
+                int stareXP = this.aktualnyPouzivatel.getCelkoveXP();
+                int noveXP = obnovenyPouzivatel.getCelkoveXP();
+
+                this.aktualnyPouzivatel = obnovenyPouzivatel;
+
+                System.out.println("🔄 UI používateľ obnovený: " + email +
+                        " (XP: " + stareXP + " → " + noveXP + ")");
+            } else {
+                System.err.println("❌ Nepodarilo sa obnoviť používateľa: " + email);
+            }
+        }
+    }
+
+    /**
      * Getter pre aktuálneho používateľa
      * @return Aktuálny používateľ
      */
     public Pouzivatel getAktualnyPouzivatel() {
         return this.aktualnyPouzivatel;
     }
-
 }

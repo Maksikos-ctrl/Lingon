@@ -77,6 +77,9 @@ public class  OvladacHlavnehoOkna {
      * Zobrazí hlavné menu
      */
     public void zobrazHlavneMenu() {
+        // 🔄 Obnovíme aktuálneho používateľa pred zobrazením menu
+        this.spravcaPouzivatela.obnovAktualnehoPozivatela();
+
         // Odstránime navigačné panely
         this.spravcaObrazoviek.odstranNavigaciuPanel();
 
@@ -101,8 +104,11 @@ public class  OvladacHlavnehoOkna {
             vysledok.ukonciTest();
         }
 
-        // Uložíme výsledok do histórie
+        // Uložíme výsledok do histórie (tu sa aktualizuje XP v databáze)
         this.spravcaHistorie.ulozVysledok(vysledok);
+
+        // 🔄 OBNOVÍME AKTUÁLNEHO POUŽÍVATEĽA S NOVÝMI XP Z DATABÁZY
+        this.spravcaPouzivatela.obnovAktualnehoPozivatela();
 
         this.spravcaObrazoviek.odstranNavigaciuPanel();
         VysledkyObrazovka vysledkyObrazovka = new VysledkyObrazovka(this, vysledok);

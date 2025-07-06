@@ -2,6 +2,7 @@ package sk.uniza.fri.lingon;
 
 import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
 import sk.uniza.fri.lingon.db.DatabaseManager;
+import sk.uniza.fri.lingon.db.FirebaseManager;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -20,6 +21,8 @@ public class Main {
      * @param args Argumenty prikazoveho riadku
      */
     public static void main(String[] args) {
+        System.out.println("🚀 Spúšťam Lingon Desktop aplikáciu...");
+
         // Nastavenie vzhľadu aplikácie
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -27,7 +30,11 @@ public class Main {
             e.printStackTrace();
         }
 
-        // Pridáme shutdown hook pre korektné zatvorenie PostgreSQL
+        // 🔥 Inicializácia Firebase (opcionálne)
+        FirebaseManager firebaseManager = FirebaseManager.getInstance();
+        firebaseManager.printStatus();
+
+        // Pridáme shutdown hook pre korektné zatvorenie
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("🔄 Zatváram aplikáciu...");
             DatabaseManager.shutdown();
@@ -42,7 +49,7 @@ public class Main {
      */
     private static void vytvorGUI() {
         // Vytvorenie hlavneho okna
-        JFrame hlavneOkno = new JFrame("Lingon");
+        JFrame hlavneOkno = new JFrame("Lingon - Desktop Quiz App");
 
         // Pridáme WindowListener pre správne zatvorenie databázy
         hlavneOkno.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -67,6 +74,14 @@ public class Main {
             System.err.println("Nepodarilo sa načítať ikonu: " + e.getMessage());
         }
 
+        // 🔥 Firebase status v title
+        FirebaseManager firebaseManager = FirebaseManager.getInstance();
+        if (firebaseManager.isInitialized()) {
+            hlavneOkno.setTitle("Lingon - Desktop Quiz App 🔥");
+        } else {
+            hlavneOkno.setTitle("Lingon - Desktop Quiz App");
+        }
+
         // Vytvorenie a nastavenie ovladaca hlavneho okna
         OvladacHlavnehoOkna ovladac = new OvladacHlavnehoOkna(hlavneOkno);
 
@@ -78,5 +93,7 @@ public class Main {
 
         // Zobrazenie uvodnej obrazovky
         ovladac.zobrazUvodnuObrazovku();
+
+        System.out.println("✅ Aplikácia spustená");
     }
 }
