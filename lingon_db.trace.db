@@ -1,0 +1,57 @@
+2025-07-05 15:35:08.894161+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "CREATE TABLE IF NOT EXISTS historia (\000a    id BIGINT [*]AUTO_INCREMENT PRIMARY KEY,\000a    pouzivatel_email VARCHAR(255) NOT NULL,\000a    kategoria_nazov VARCHAR(255) NOT NULL,\000a    cas_ukoncenia TIMESTAMP NOT NULL,\000a    pocet_otazok INTEGER NOT NULL,\000a    spravne_odpovede INTEGER NOT NULL,\000a    nespravne_odpovede INTEGER NOT NULL,\000a    uspesnost DECIMAL(5,2) NOT NULL\000a)"; expected "ARRAY, INVISIBLE, VISIBLE, NOT NULL, DEFAULT, GENERATED, ON UPDATE, NOT NULL, DEFAULT ON NULL, SEQUENCE, SELECTIVITY, COMMENT, CONSTRAINT, COMMENT, PRIMARY KEY, UNIQUE, NOT NULL, CHECK, REFERENCES, ,, )"; SQL statement:
+CREATE TABLE IF NOT EXISTS historia (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    pouzivatel_email VARCHAR(255) NOT NULL,
+    kategoria_nazov VARCHAR(255) NOT NULL,
+    cas_ukoncenia TIMESTAMP NOT NULL,
+    pocet_otazok INTEGER NOT NULL,
+    spravne_odpovede INTEGER NOT NULL,
+    nespravne_odpovede INTEGER NOT NULL,
+    uspesnost DECIMAL(5,2) NOT NULL
+) [42001-224]
+2025-07-05 15:35:08.903682+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "POUZIVATELIA" not found (this database is empty); SQL statement:
+SELECT * FROM pouzivatelia WHERE email = ? [42104-224]
+2025-07-05 15:35:08.903682+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "POUZIVATELIA" not found (this database is empty); SQL statement:
+INSERT INTO pouzivatelia (meno, email, celkove_xp, spravne_odpovede, nespravne_odpovede)
+VALUES (?, ?, ?, ?, ?) [42104-224]
+2025-07-05 15:37:23.540818+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "CREATE TABLE IF NOT EXISTS historia (\000a    id BIGINT [*]AUTO_INCREMENT PRIMARY KEY,\000a    pouzivatel_email VARCHAR(255) NOT NULL,\000a    kategoria_nazov VARCHAR(255) NOT NULL,\000a    cas_ukoncenia TIMESTAMP NOT NULL,\000a    pocet_otazok INTEGER NOT NULL,\000a    spravne_odpovede INTEGER NOT NULL,\000a    nespravne_odpovede INTEGER NOT NULL,\000a    uspesnost DECIMAL(5,2) NOT NULL\000a)"; expected "ARRAY, INVISIBLE, VISIBLE, NOT NULL, DEFAULT, GENERATED, ON UPDATE, NOT NULL, DEFAULT ON NULL, SEQUENCE, SELECTIVITY, COMMENT, CONSTRAINT, COMMENT, PRIMARY KEY, UNIQUE, NOT NULL, CHECK, REFERENCES, ,, )"; SQL statement:
+CREATE TABLE IF NOT EXISTS historia (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    pouzivatel_email VARCHAR(255) NOT NULL,
+    kategoria_nazov VARCHAR(255) NOT NULL,
+    cas_ukoncenia TIMESTAMP NOT NULL,
+    pocet_otazok INTEGER NOT NULL,
+    spravne_odpovede INTEGER NOT NULL,
+    nespravne_odpovede INTEGER NOT NULL,
+    uspesnost DECIMAL(5,2) NOT NULL
+) [42001-224]
+2025-07-05 15:37:23.550027+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "POUZIVATELIA" not found (this database is empty); SQL statement:
+SELECT * FROM pouzivatelia WHERE email = ? [42104-224]
+2025-07-05 15:37:23.550027+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "POUZIVATELIA" not found (this database is empty); SQL statement:
+INSERT INTO pouzivatelia (meno, email, celkove_xp, spravne_odpovede, nespravne_odpovede)
+VALUES (?, ?, ?, ?, ?) [42104-224]
+2025-07-05 15:38:34.789610+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "CREATE TABLE IF NOT EXISTS historia (\000a    id BIGINT [*]IDENTITY PRIMARY KEY,\000a    pouzivatel_email VARCHAR(255) NOT NULL,\000a    kategoria_nazov VARCHAR(255) NOT NULL,\000a    cas_ukoncenia TIMESTAMP NOT NULL,\000a    pocet_otazok INTEGER NOT NULL,\000a    spravne_odpovede INTEGER NOT NULL,\000a    nespravne_odpovede INTEGER NOT NULL,\000a    uspesnost DECIMAL(5,2) NOT NULL\000a)"; expected "ARRAY, INVISIBLE, VISIBLE, NOT NULL, DEFAULT, GENERATED, ON UPDATE, NOT NULL, DEFAULT ON NULL, SEQUENCE, SELECTIVITY, COMMENT, CONSTRAINT, COMMENT, PRIMARY KEY, UNIQUE, NOT NULL, CHECK, REFERENCES, ,, )"; SQL statement:
+CREATE TABLE IF NOT EXISTS historia (
+    id BIGINT IDENTITY PRIMARY KEY,
+    pouzivatel_email VARCHAR(255) NOT NULL,
+    kategoria_nazov VARCHAR(255) NOT NULL,
+    cas_ukoncenia TIMESTAMP NOT NULL,
+    pocet_otazok INTEGER NOT NULL,
+    spravne_odpovede INTEGER NOT NULL,
+    nespravne_odpovede INTEGER NOT NULL,
+    uspesnost DECIMAL(5,2) NOT NULL
+) [42001-224]
+2025-07-05 15:38:34.801121+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "POUZIVATELIA" not found (this database is empty); SQL statement:
+SELECT * FROM pouzivatelia WHERE email = ? [42104-224]
+2025-07-05 15:38:34.802121+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "POUZIVATELIA" not found (this database is empty); SQL statement:
+INSERT INTO pouzivatelia (meno, email, celkove_xp, spravne_odpovede, nespravne_odpovede)
+VALUES (?, ?, ?, ?, ?) [42104-224]

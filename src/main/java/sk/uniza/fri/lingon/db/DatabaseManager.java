@@ -1,110 +1,168 @@
 package sk.uniza.fri.lingon.db;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import java.io.File;
 import java.lang.reflect.Field;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import sk.uniza.fri.lingon.core.VysledokTestu;
 import sk.uniza.fri.lingon.pouzivatel.Pouzivatel;
 
 /**
- * Správca databázy SQLite pre ukladanie histórie testov.
- * Poskytuje metódy pre prácu s databázou, vrátane CRUD operácií
- * pre výsledky testov a používateľov.
+ * Správca databázy H2 pre ukladanie histórie testov.
+ * KOMPATIBILNÁ VERZIA PRE SYNCHRONIZÁCIU!
  */
 public class DatabaseManager {
 
-    /** Názov databázového súboru. */
-    private static final String DB_NAME = "lingon_historia.db";
+    // 🔧 JEDNODUCHÁ H2 KONFIGURÁCIA BEZ PROBLÉMOV
+    private static final String SHARED_DB_PATH = getSyncedDatabasePath();
+    private static final String DB_URL = "jdbc:h2:" + SHARED_DB_PATH + "lingon_historia";
+    private static final String DB_USER = "sa";
+    private static final String DB_PASSWORD = "";
 
-    /** URL pre pripojenie k databáze. */
-    private static final String DB_URL = "jdbc:sqlite:" + DB_NAME;
+    private static HikariDataSource dataSource;
 
     static {
         try {
-            Class.forName("org.sqlite.JDBC");
+            System.out.println("🔗 Desktop DB Path: " + DB_URL);
+            setupDataSource();
             vytvorTabulky();
-        } catch (ClassNotFoundException e) {
-            System.err.println("SQLite driver nenájdený: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("❌ Chyba pri inicializácii H2 Database: " + e.getMessage());
+            e.printStackTrace();
         }
+    }
+
+    /**
+     * 🔄 Získa synchronizovaný path k databáze
+     */
+    private static String getSyncedDatabasePath() {
+        // Používame Documents folder pre jednoduchosť
+        String externalPath = System.getProperty("user.home") + "/Documents/LingonQuiz/";
+
+        // Vytvoríme priečinok ak neexistuje
+        File dir = new File(externalPath);
+        if (!dir.exists()) {
+            boolean created = dir.mkdirs();
+            if (created) {
+                System.out.println("✅ Vytvorený synchronizačný priečinok: " + externalPath);
+            } else {
+                System.out.println("⚠️ Nepodarilo sa vytvoriť priečinok: " + externalPath);
+                // Fallback na aktuálny priečinok
+                externalPath = "./";
+            }
+        }
+
+        return externalPath;
+    }
+
+    /**
+     * JEDNODUCHÁ konfigurácia H2 Database
+     */
+    private static void setupDataSource() {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(DB_URL);
+        config.setUsername(DB_USER);
+        config.setPassword(DB_PASSWORD);
+        config.setDriverClassName("org.h2.Driver");
+
+        // ZÁKLADNÉ nastavenia bez problémových opcií
+        config.setMaximumPoolSize(3);
+        config.setMinimumIdle(1);
+        config.setConnectionTimeout(30000);
+        config.setIdleTimeout(600000);
+        config.setMaxLifetime(1800000);
+
+        dataSource = new HikariDataSource(config);
+        System.out.println("✅ H2 Database connection pool inicializovaný (KOMPATIBILNÝ)");
     }
 
     /**
      * Vytvorí tabuľky ak neexistujú.
-     * Inicializuje schému databázy a kontroluje existenciu stĺpcov.
      */
-    private static void vytvorTabulky() {
-        String sql = "CREATE TABLE IF NOT EXISTS historia (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "pouzivatel_email TEXT NOT NULL," +
-                "kategoria_nazov TEXT NOT NULL," +
-                "cas_ukoncenia TEXT NOT NULL," +
-                "pocet_otazok INTEGER NOT NULL," +
-                "spravne_odpovede INTEGER NOT NULL," +
-                "nespravne_odpovede INTEGER NOT NULL," +
-                "uspesnost REAL NOT NULL" +
-                ")";
+    private static void vytvorTabulky() throws SQLException {
+        // ROVNAKÁ ŠTRUKTÚRA AKO V MOBILE!
+        String sqlHistoria = """
+            CREATE TABLE IF NOT EXISTS historia (
+                id IDENTITY PRIMARY KEY,
+                pouzivatel_email VARCHAR(255) NOT NULL,
+                kategoria_nazov VARCHAR(255) NOT NULL,
+                cas_ukoncenia TIMESTAMP NOT NULL,
+                pocet_otazok INTEGER NOT NULL,
+                spravne_odpovede INTEGER NOT NULL,
+                nespravne_odpovede INTEGER NOT NULL,
+                uspesnost DECIMAL(5,2) NOT NULL
+            )""";
+
+        String sqlPouzivatelia = """
+            CREATE TABLE IF NOT EXISTS pouzivatelia (
+                id IDENTITY PRIMARY KEY,
+                meno VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL UNIQUE,
+                celkove_xp INTEGER DEFAULT 0,
+                spravne_odpovede INTEGER DEFAULT 0,
+                nespravne_odpovede INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )""";
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
-            stmt.execute(sql);
-            System.out.println("Tabuľka 'historia' je pripravená.");
 
-            // Kontrola či existuje stĺpec pouzivatel_email
-            try {
-                ResultSet rs = stmt.executeQuery("SELECT pouzivatel_email FROM historia LIMIT 1");
-                rs.close();
-            } catch (SQLException e) {
-                // Stĺpec neexistuje, pridáme ho
-                try {
-                    stmt.execute("ALTER TABLE historia ADD COLUMN pouzivatel_email TEXT DEFAULT 'unknown'");
-                    System.out.println("Stĺpec 'pouzivatel_email' pridaný do tabuľky 'historia'.");
-                } catch (SQLException e2) {
-                    System.err.println("Chyba pri pridávaní stĺpca 'pouzivatel_email': " + e2.getMessage());
-                }
-            }
+            stmt.execute(sqlHistoria);
+            System.out.println("✅ Tabuľka 'historia' pripravená");
+
+            stmt.execute(sqlPouzivatelia);
+            System.out.println("✅ Tabuľka 'pouzivatelia' pripravená");
+
+            // Vytvoríme indexy pre lepší výkon
+            vytvorIndexy(stmt);
 
         } catch (SQLException e) {
-            System.err.println("Chyba pri vytváraní tabuľky: " + e.getMessage());
+            System.err.println("❌ Chyba pri vytváraní tabuliek: " + e.getMessage());
+            throw e;
         }
     }
 
     /**
-     * Získa spojenie s databázou.
-     *
-     * @return Spojenie (Connection) s databázou SQLite
-     * @throws SQLException ak nastane chyba pri pripojení k databáze
+     * Vytvorí indexy pre optimálny výkon
+     */
+    private static void vytvorIndexy(Statement stmt) throws SQLException {
+        try {
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_historia_email ON historia(pouzivatel_email)");
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_historia_cas ON historia(cas_ukoncenia)");
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_pouzivatelia_email ON pouzivatelia(email)");
+            System.out.println("✅ Indexy vytvorené");
+        } catch (SQLException e) {
+            System.out.println("💡 Indexy už existujú alebo nie sú podporované");
+        }
+    }
+
+    /**
+     * Získa spojenie s H2 databázou
      */
     private static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(DB_URL);
+        if (dataSource == null) {
+            throw new SQLException("H2 connection pool nie je inicializovaný");
+        }
+        return dataSource.getConnection();
     }
 
     /**
      * Vytvorí a nakonfiguruje objekt VysledokTestu s danými parametrami.
-     * Extrahovanie spoločnej logiky pre odstránenie duplicitného kódu.
-     *
-     * @param kategoriaId ID kategórie testu
-     * @param kategoriaNazov názov kategórie testu
-     * @param pocetOtazok celkový počet otázok
-     * @param pouzivatelEmail email používateľa
-     * @param spravne počet správnych odpovedí
-     * @param nespravne počet nesprávnych odpovedí
-     * @return nakonfigurovaný objekt VysledokTestu
      */
     private static VysledokTestu vytvorVysledok(String kategoriaId, String kategoriaNazov,
-                                                int pocetOtazok, String pouzivatelEmail, int spravne, int nespravne) {
-        // Vytvoríme výsledok
+                                                int pocetOtazok, String pouzivatelEmail,
+                                                int spravne, int nespravne) {
         VysledokTestu vysledok = new VysledokTestu(kategoriaId, kategoriaNazov, pocetOtazok);
         vysledok.setPouzivatelEmail(pouzivatelEmail);
 
-        // Nastavíme správne a nesprávne odpovede
         for (int i = 0; i < spravne; i++) {
             vysledok.pridajSpravnuOdpoved();
         }
@@ -117,41 +175,59 @@ public class DatabaseManager {
 
     /**
      * Uloží výsledok testu do databázy.
-     *
-     * @param vysledok výsledok testu na uloženie
      */
     public static void ulozVysledok(VysledokTestu vysledok) {
-        String sql = "INSERT INTO historia (pouzivatel_email, kategoria_nazov, cas_ukoncenia, pocet_otazok, " +
-                "spravne_odpovede, nespravne_odpovede, uspesnost) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = """
+            INSERT INTO historia (pouzivatel_email, kategoria_nazov, cas_ukoncenia, 
+                                 pocet_otazok, spravne_odpovede, nespravne_odpovede, uspesnost) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)""";
 
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            String casovaZnacka = vysledok.getCasUkoncenia().format(formatter);
-
             pstmt.setString(1, vysledok.getPouzivatelEmail());
             pstmt.setString(2, vysledok.getKategoriaNazov());
-            pstmt.setString(3, casovaZnacka); // Uložíme čas v DB formáte
+            pstmt.setObject(3, vysledok.getCasUkoncenia());
             pstmt.setInt(4, vysledok.getPocetOtazok());
             pstmt.setInt(5, vysledok.getSpravneOdpovede());
             pstmt.setInt(6, vysledok.getNespravneOdpovede());
             pstmt.setDouble(7, vysledok.getUspesnost());
 
             pstmt.executeUpdate();
-            System.out.println("Výsledok testu uložený do databázy pre používateľa: " +
-                    vysledok.getPouzivatelEmail() + " v čase: " + casovaZnacka);
+            System.out.println("✅ Výsledok uložený do SYNCHRONIZOVANEJ H2 Database: " + vysledok.getPouzivatelEmail());
+
+            // Aktualizujeme používateľa po teste
+            aktualizujPouzivatelaPoTeste(vysledok);
 
         } catch (SQLException e) {
-            System.err.println("Chyba pri ukladaní do databázy: " + e.getMessage());
+            System.err.println("❌ Chyba pri ukladaní: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 🔄 Aktualizuje XP používateľa po teste
+     */
+    private static void aktualizujPouzivatelaPoTeste(VysledokTestu vysledok) {
+        try {
+            Pouzivatel pouzivatel = nacitajPouzivatela(vysledok.getPouzivatelEmail());
+            if (pouzivatel != null) {
+                // Pridáme XP za test
+                int bonusXP = vysledok.getSpravneOdpovede() * 10; // 10 XP za správnu odpoveď
+                pouzivatel.setCelkoveXP(pouzivatel.getCelkoveXP() + bonusXP);
+                pouzivatel.setSpravneOdpovede(pouzivatel.getSpravneOdpovede() + vysledok.getSpravneOdpovede());
+                pouzivatel.setNespravneOdpovede(pouzivatel.getNespravneOdpovede() + vysledok.getNespravneOdpovede());
+
+                aktualizujPouzivatela(pouzivatel);
+                System.out.println("🔄 Používateľ synchronizovaný: " + pouzivatel.getEmail() + " (+" + bonusXP + " XP)");
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Chyba pri aktualizácii používateľa: " + e.getMessage());
         }
     }
 
     /**
      * Načíta históriu testov pre konkrétneho používateľa.
-     *
-     * @param email email používateľa, ktorého história sa má načítať
-     * @return zoznam výsledkov testov pre daného používateľa
      */
     public static List<VysledokTestu> nacitajHistoriuPouzivatela(String email) {
         List<VysledokTestu> historia = new ArrayList<>();
@@ -165,33 +241,21 @@ public class DatabaseManager {
 
             while (rs.next()) {
                 String kategoriaNazov = rs.getString("kategoria_nazov");
-                String casUkonceniaStr = rs.getString("cas_ukoncenia");
+                LocalDateTime casUkoncenia = rs.getTimestamp("cas_ukoncenia").toLocalDateTime();
                 int pocetOtazok = rs.getInt("pocet_otazok");
                 int spravne = rs.getInt("spravne_odpovede");
                 int nespravne = rs.getInt("nespravne_odpovede");
 
-                // Použijeme pomocnú metódu namiesto duplicitného kódu
-                VysledokTestu vysledok = vytvorVysledok("", kategoriaNazov, pocetOtazok, email, spravne, nespravne);
-
-                // Nastavíme presný čas z databázy
-                try {
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                    LocalDateTime casUkoncenia = LocalDateTime.parse(casUkonceniaStr, formatter);
-                    // Nastavíme čas ukončenia cez reflexiu alebo použijeme setterCasUkoncenia
-                    setCasUkoncenia(vysledok, casUkoncenia);
-                } catch (Exception e) {
-                    // Ak sa nepodarí parse, ukončíme test normálne
-                    vysledok.ukonciTest();
-                }
-
+                VysledokTestu vysledok = vytvorVysledok("", kategoriaNazov, pocetOtazok,
+                        email, spravne, nespravne);
+                setCasUkoncenia(vysledok, casUkoncenia);
                 historia.add(vysledok);
             }
 
-            System.out.println("Načítané " + historia.size() +
-                    " záznamov z databázy pre používateľa: " + email);
+            System.out.println("✅ Načítané " + historia.size() + " záznamov pre: " + email);
 
         } catch (SQLException e) {
-            System.err.println("Chyba pri čítaní z databázy: " + e.getMessage());
+            System.err.println("❌ Chyba pri čítaní histórie: " + e.getMessage());
         }
 
         return historia;
@@ -199,18 +263,13 @@ public class DatabaseManager {
 
     /**
      * Pomocná metóda na nastavenie času ukončenia.
-     *
-     * @param vysledok výsledok testu, ktorému sa má nastaviť čas
-     * @param cas čas ukončenia, ktorý sa má nastaviť
      */
     private static void setCasUkoncenia(VysledokTestu vysledok, LocalDateTime cas) {
         try {
-            // Použitie reflexie pre prístup k privátnym poliam, keďže možno nemáme setter
             Field field = VysledokTestu.class.getDeclaredField("casUkoncenia");
             field.setAccessible(true);
             field.set(vysledok, cas);
 
-            // Musíme tiež nastaviť hodnotu úspešnosti
             field = VysledokTestu.class.getDeclaredField("uspesnost");
             field.setAccessible(true);
             field.set(vysledok, (double)vysledok.getSpravneOdpovede() / vysledok.getPocetOtazok() * 100);
@@ -220,9 +279,7 @@ public class DatabaseManager {
     }
 
     /**
-     * Načíta všetku históriu testov (ponecháme pre spätnú kompatibilitu).
-     *
-     * @return zoznam všetkých výsledkov testov
+     * Načíta všetku históriu testov.
      */
     public static List<VysledokTestu> nacitajHistoriu() {
         List<VysledokTestu> historia = new ArrayList<>();
@@ -237,27 +294,19 @@ public class DatabaseManager {
                 int pocetOtazok = rs.getInt("pocet_otazok");
                 int spravne = rs.getInt("spravne_odpovede");
                 int nespravne = rs.getInt("nespravne_odpovede");
+                String pouzivatelEmail = rs.getString("pouzivatel_email");
+                LocalDateTime casUkoncenia = rs.getTimestamp("cas_ukoncenia").toLocalDateTime();
 
-                // Získanie emailu používateľa (ak existuje stĺpec)
-                String pouzivatelEmail = "unknown";
-                try {
-                    pouzivatelEmail = rs.getString("pouzivatel_email");
-                } catch (SQLException e) {
-                    // Stĺpec neexistuje, použijeme predvolenú hodnotu
-                }
-
-                // Použijeme pomocnú metódu namiesto duplicitného kódu
                 VysledokTestu vysledok = vytvorVysledok("", kategoriaNazov, pocetOtazok,
                         pouzivatelEmail, spravne, nespravne);
-
-                vysledok.ukonciTest();
+                setCasUkoncenia(vysledok, casUkoncenia);
                 historia.add(vysledok);
             }
 
-            System.out.println("Načítané " + historia.size() + " záznamov z databázy.");
+            System.out.println("✅ Načítané " + historia.size() + " záznamov z H2 Database");
 
         } catch (SQLException e) {
-            System.err.println("Chyba pri čítaní z databázy: " + e.getMessage());
+            System.err.println("❌ Chyba pri čítaní z databázy: " + e.getMessage());
         }
 
         return historia;
@@ -265,8 +314,6 @@ public class DatabaseManager {
 
     /**
      * Vymaže históriu testov konkrétneho používateľa.
-     *
-     * @param email email používateľa, ktorého história sa má vymazať
      */
     public static void vymazHistoriuPouzivatela(String email) {
         String sql = "DELETE FROM historia WHERE pouzivatel_email = ?";
@@ -276,10 +323,10 @@ public class DatabaseManager {
 
             pstmt.setString(1, email);
             int pocet = pstmt.executeUpdate();
-            System.out.println("História vymazaná pre používateľa: " + email + " (" + pocet + " záznamov)");
+            System.out.println("✅ História vymazaná pre: " + email + " (" + pocet + " záznamov)");
 
         } catch (SQLException e) {
-            System.err.println("Chyba pri mazaní histórie: " + e.getMessage());
+            System.err.println("❌ Chyba pri mazaní histórie: " + e.getMessage());
         }
     }
 
@@ -293,18 +340,15 @@ public class DatabaseManager {
              Statement stmt = conn.createStatement()) {
 
             stmt.executeUpdate(sql);
-            System.out.println("História vymazaná.");
+            System.out.println("✅ História vymazaná z H2 Database");
 
         } catch (SQLException e) {
-            System.err.println("Chyba pri mazaní histórie: " + e.getMessage());
+            System.err.println("❌ Chyba pri mazaní histórie: " + e.getMessage());
         }
     }
 
     /**
      * Kontroluje, či používateľ s daným emailom existuje v databáze.
-     *
-     * @param email email používateľa na kontrolu
-     * @return true ak používateľ existuje, inak false
      */
     public static boolean existujePouzivatel(String email) {
         String sql = "SELECT COUNT(*) FROM pouzivatelia WHERE email = ?";
@@ -319,48 +363,19 @@ public class DatabaseManager {
                 return rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
-            System.err.println("Chyba pri kontrole existencie používateľa: " + e.getMessage());
-
-            // Skúsime vytvoriť tabuľku, ak neexistuje
-            vytvorTabulkuPouzivatelia();
+            System.err.println("❌ Chyba pri kontrole existencie používateľa: " + e.getMessage());
         }
 
         return false;
     }
 
     /**
-     * Vytvorí tabuľku pre používateľov, ak neexistuje.
-     */
-    private static void vytvorTabulkuPouzivatelia() {
-        String sql = "CREATE TABLE IF NOT EXISTS pouzivatelia (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "meno TEXT NOT NULL," +
-                "email TEXT NOT NULL UNIQUE," +
-                "celkove_xp INTEGER DEFAULT 0," +
-                "spravne_odpovede INTEGER DEFAULT 0," +
-                "nespravne_odpovede INTEGER DEFAULT 0" +
-                ")";
-
-        try (Connection conn = getConnection();
-             Statement stmt = conn.createStatement()) {
-            stmt.execute(sql);
-            System.out.println("Tabuľka 'pouzivatelia' je pripravená.");
-        } catch (SQLException e) {
-            System.err.println("Chyba pri vytváraní tabuľky pouzivatelia: " + e.getMessage());
-        }
-    }
-
-    /**
      * Uloží používateľa do databázy.
-     *
-     * @param pouzivatel objekt používateľa, ktorý sa má uložiť
-     * @return true ak bolo uloženie úspešné, inak false
      */
     public static boolean ulozPouzivatela(Pouzivatel pouzivatel) {
-        vytvorTabulkuPouzivatelia();
-
-        String sql = "INSERT INTO pouzivatelia (meno, email, celkove_xp, spravne_odpovede, nespravne_odpovede) " +
-                "VALUES (?, ?, ?, ?, ?)";
+        String sql = """
+            INSERT INTO pouzivatelia (meno, email, celkove_xp, spravne_odpovede, nespravne_odpovede) 
+            VALUES (?, ?, ?, ?, ?)""";
 
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -372,24 +387,19 @@ public class DatabaseManager {
             pstmt.setInt(5, pouzivatel.getNespravneOdpovede());
 
             pstmt.executeUpdate();
-            System.out.println("Používateľ úspešne uložený do databázy: " + pouzivatel.getEmail());
+            System.out.println("✅ Používateľ uložený do H2 Database: " + pouzivatel.getEmail());
             return true;
 
         } catch (SQLException e) {
-            System.err.println("Chyba pri ukladaní používateľa: " + e.getMessage());
+            System.err.println("❌ Chyba pri ukladaní používateľa: " + e.getMessage());
             return false;
         }
     }
 
     /**
      * Načíta používateľa z databázy podľa emailu.
-     *
-     * @param email email používateľa, ktorý sa má načítať
-     * @return objekt používateľa alebo null ak používateľ neexistuje
      */
     public static Pouzivatel nacitajPouzivatela(String email) {
-        vytvorTabulkuPouzivatelia(); // Uistíme sa, že tabuľka existuje
-
         String sql = "SELECT * FROM pouzivatelia WHERE email = ?";
 
         try (Connection conn = getConnection();
@@ -405,34 +415,29 @@ public class DatabaseManager {
                 int nespravneOdpovede = rs.getInt("nespravne_odpovede");
 
                 Pouzivatel pouzivatel = new Pouzivatel(meno, email);
-
-                // Nastavenie hodnôt
                 pouzivatel.setCelkoveXP(celkoveXP);
                 pouzivatel.setSpravneOdpovede(spravneOdpovede);
                 pouzivatel.setNespravneOdpovede(nespravneOdpovede);
 
-                System.out.println("Používateľ úspešne načítaný z databázy: " + email);
+                System.out.println("✅ Používateľ načítaný z H2 Database: " + email);
                 return pouzivatel;
             }
         } catch (SQLException e) {
-            System.err.println("Chyba pri načítaní používateľa: " + e.getMessage());
+            System.err.println("❌ Chyba pri načítaní používateľa: " + e.getMessage());
         }
 
-        System.out.println("Používateľ s emailom " + email + " nebol nájdený v databáze.");
+        System.out.println("⚠️ Používateľ s emailom " + email + " nebol nájdený");
         return null;
     }
 
     /**
      * Aktualizuje používateľa v databáze.
-     *
-     * @param pouzivatel objekt používateľa, ktorý sa má aktualizovať
-     * @return true ak bola aktualizácia úspešná, inak false
      */
     public static boolean aktualizujPouzivatela(Pouzivatel pouzivatel) {
-        vytvorTabulkuPouzivatelia(); // Uistíme sa, že tabuľka existuje
-
-        String sql = "UPDATE pouzivatelia SET meno = ?, celkove_xp = ?, " +
-                "spravne_odpovede = ?, nespravne_odpovede = ? WHERE email = ?";
+        String sql = """
+            UPDATE pouzivatelia 
+            SET meno = ?, celkove_xp = ?, spravne_odpovede = ?, nespravne_odpovede = ? 
+            WHERE email = ?""";
 
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -444,12 +449,22 @@ public class DatabaseManager {
             pstmt.setString(5, pouzivatel.getEmail());
 
             int affectedRows = pstmt.executeUpdate();
-            System.out.println("Používateľ úspešne aktualizovaný v databáze: " + pouzivatel.getEmail());
+            System.out.println("✅ Používateľ aktualizovaný v H2 Database: " + pouzivatel.getEmail());
             return affectedRows > 0;
 
         } catch (SQLException e) {
-            System.err.println("Chyba pri aktualizácii používateľa: " + e.getMessage());
+            System.err.println("❌ Chyba pri aktualizácii používateľa: " + e.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Zatvorí všetky databázové spojenia pri ukončení aplikácie
+     */
+    public static void shutdown() {
+        if (dataSource != null) {
+            dataSource.close();
+            System.out.println("🔒 H2 Database connection pool zatvorený");
         }
     }
 }

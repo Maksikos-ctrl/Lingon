@@ -20,7 +20,7 @@ import java.awt.BorderLayout;
  * Hlavný ovládač aplikácie
  * Koordinuje prácu ostatných správcov
  */
-public class OvladacHlavnehoOkna {
+public class  OvladacHlavnehoOkna {
     private final JFrame hlavneOkno;
     private final UIKontajner kontajner;
     private final SpravcaKvizu spravcaKvizu;

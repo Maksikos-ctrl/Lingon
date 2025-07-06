@@ -1,6 +1,7 @@
 package sk.uniza.fri.lingon;
 
 import sk.uniza.fri.lingon.grafika.hlavny.OvladacHlavnehoOkna;
+import sk.uniza.fri.lingon.db.DatabaseManager;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -26,6 +27,12 @@ public class Main {
             e.printStackTrace();
         }
 
+        // Pridáme shutdown hook pre korektné zatvorenie PostgreSQL
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("🔄 Zatváram aplikáciu...");
+            DatabaseManager.shutdown();
+        }));
+
         // Spustenie aplikacie v EDT (Event Dispatch Thread)
         SwingUtilities.invokeLater(Main::vytvorGUI);
     }
@@ -36,7 +43,18 @@ public class Main {
     private static void vytvorGUI() {
         // Vytvorenie hlavneho okna
         JFrame hlavneOkno = new JFrame("Lingon");
-        hlavneOkno.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // Pridáme WindowListener pre správne zatvorenie databázy
+        hlavneOkno.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        hlavneOkno.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                System.out.println("🔄 Zatváram aplikáciu cez GUI...");
+                DatabaseManager.shutdown();
+                System.exit(0);
+            }
+        });
+
         hlavneOkno.setSize(800, 600);
         hlavneOkno.setMinimumSize(new Dimension(640, 480));
 
