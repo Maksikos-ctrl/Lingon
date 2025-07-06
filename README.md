@@ -2,6 +2,8 @@
 
 <div align="center">
   <img src="resources/images/icon.png" alt="Lingon Logo" width="200"/>
+  ![icon](https://github.com/user-attachments/assets/01e0c8bf-b2a1-49ed-bc71-3b0240d6f8ce)
+
 
   <p><i>Interactive educational desktop application with cloud synchronization</i></p>
 
