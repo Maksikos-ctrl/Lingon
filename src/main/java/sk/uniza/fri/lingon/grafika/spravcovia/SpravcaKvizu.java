@@ -234,33 +234,26 @@ public class SpravcaKvizu {
         return panel;
     }
 
+    /**
+     * Ukončí test a spracuje výsledky - KOMPLETNE OPRAVENÁ VERZIA
+     */
     public void ukonciTest() {
         if (this.aktualnyVysledok != null) {
+            // Ukončíme test
             this.aktualnyVysledok.ukonciTest();
 
-            // Pridajme XP body používateľovi na základe úspešnosti
-            Pouzivatel aktualnyPouzivatel = this.ovladac.getAktualnyPouzivatel();
-            if (aktualnyPouzivatel != null) {
-                int pridaneXP = (int)(this.aktualnyVysledok.getUspesnost() / 10); // 1 XP za každých 10% úspešnosti
-                this.ovladac.pridajXP(pridaneXP);
+            System.out.println("📊 Test ukončený. Výsledky spracováva DatabaseManager...");
 
-                // Zaznamenáme správne a nesprávne odpovede do profilu používateľa
-                aktualnyPouzivatel.setSpravneOdpovede(
-                        aktualnyPouzivatel.getSpravneOdpovede() + this.aktualnyVysledok.getSpravneOdpovede()
-                );
+            // ❌ ODSTRÁNENÉ VŠETKO XP POČÍTANIE - bude sa robiť v DatabaseManager
+            // ❌ ODSTRÁNENÉ: int pridaneXP = (int)(this.aktualnyVysledok.getUspesnost() / 10);
+            // ❌ ODSTRÁNENÉ: this.ovladac.pridajXP(pridaneXP);
+            // ❌ ODSTRÁNENÉ: Aktualizácia štatistík používateľa
+            // ❌ ODSTRÁNENÉ: DatabaseManager.aktualizujPouzivatela(aktualnyPouzivatel);
 
-                aktualnyPouzivatel.setNespravneOdpovede(
-                        aktualnyPouzivatel.getNespravneOdpovede() + this.aktualnyVysledok.getNespravneOdpovede()
-                );
-
-                // Uložiť aktualizovaného používateľa
-                DatabaseManager.aktualizujPouzivatela(aktualnyPouzivatel);
-            }
-
-            // Zobraziť výsledky
+            // ✅ Iba zobrazíme výsledky - XP sa spočíta automaticky
             this.ovladac.zobrazVysledky(this.aktualnyVysledok);
         } else {
-            // Ak nemáme výsledok, len sa vrátime do menu
+            // Ak nemáme výsledok, vrátime sa do menu
             this.ovladac.zobrazHlavneMenu();
         }
     }

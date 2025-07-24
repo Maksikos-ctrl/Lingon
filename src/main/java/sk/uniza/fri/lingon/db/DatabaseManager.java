@@ -205,47 +205,188 @@ public class DatabaseManager {
     private static void aktualizujPouzivatelaPoTeste(VysledokTestu vysledok) {
         try {
             String email = vysledok.getPouzivatelEmail();
+            System.out.println("🎯 Starting XP update for user: " + email);
 
-            // 1. NAJPRV načítaj najnovšie dáta z Firebase
-            Pouzivatel firebaseUser = firebaseManager.loadUser(email);
-            Pouzivatel aktualnyPouzivatel;
+            // 1. Načítaj aktuálne dáta používateľa (Firebase má prioritu)
+            Pouzivatel aktualnyPouzivatel = nacitajNajnovsiehoPozivatela(email);
 
-            if (firebaseUser != null) {
-                // Použij dáta z Firebase (najnovšie)
-                aktualnyPouzivatel = firebaseUser;
-                System.out.println("🔥 Používam dáta z Firebase: " + email + " (XP: " + firebaseUser.getCelkoveXP() + ")");
-            } else {
-                // Fallback na H2 ak Firebase nedostupný
-                aktualnyPouzivatel = nacitajPouzivatelaZH2(email);
-                if (aktualnyPouzivatel == null) {
-                    System.err.println("❌ Používateľ nenájdený ani v Firebase ani v H2: " + email);
-                    return;
-                }
-                System.out.println("📱 Používam dáta z H2: " + email + " (XP: " + aktualnyPouzivatel.getCelkoveXP() + ")");
+            if (aktualnyPouzivatel == null) {
+                System.err.println("❌ User not found in Firebase or H2: " + email);
+                return;
             }
 
-            // 2. Pridaj XP za aktuálny test
+            // 2. Vypočítaj XP bonus za test
             int bonusXP = vysledok.getSpravneOdpovede() * 10; // 10 XP za správnu odpoveď
             int stareXP = aktualnyPouzivatel.getCelkoveXP();
+            int noveXP = stareXP + bonusXP;
 
-            aktualnyPouzivatel.setCelkoveXP(stareXP + bonusXP);
-            aktualnyPouzivatel.setSpravneOdpovede(aktualnyPouzivatel.getSpravneOdpovede() + vysledok.getSpravneOdpovede());
-            aktualnyPouzivatel.setNespravneOdpovede(aktualnyPouzivatel.getNespravneOdpovede() + vysledok.getNespravneOdpovede());
+            System.out.println("📊 XP Calculation Details:");
+            System.out.println("   - Previous XP: " + stareXP);
+            System.out.println("   - Correct answers: " + vysledok.getSpravneOdpovede());
+            System.out.println("   - XP per correct answer: 10");
+            System.out.println("   - Bonus XP: " + bonusXP);
+            System.out.println("   - New total XP: " + noveXP);
 
-            System.out.println("🔄 XP update: " + stareXP + " + " + bonusXP + " = " + aktualnyPouzivatel.getCelkoveXP());
+            // 3. Aktualizuj údaje používateľa
+            aktualnyPouzivatel.setCelkoveXP(noveXP);
+            aktualnyPouzivatel.setSpravneOdpovede(
+                    aktualnyPouzivatel.getSpravneOdpovede() + vysledok.getSpravneOdpovede()
+            );
+            aktualnyPouzivatel.setNespravneOdpovede(
+                    aktualnyPouzivatel.getNespravneOdpovede() + vysledok.getNespravneOdpovede()
+            );
 
-            // 3. Aktualizuj H2 databázu
-            aktualizujPouzivatelaVH2(aktualnyPouzivatel);
+            // 4. Uloží do H2 databázy najprv (lokálny fallback)
+            boolean h2Success = aktualizujPouzivatelaVH2(aktualnyPouzivatel);
+            if (!h2Success) {
+                System.err.println("❌ Failed to update H2 database for: " + email);
+                return;
+            }
 
-            // 4. Synchronizuj do Firebase
-            firebaseManager.syncUser(aktualnyPouzivatel);
+            // 5. Synchronizácia s Firebase (s retry mechanizmom)
+            synchronizujSFirebaseRetry(aktualnyPouzivatel, 3);
 
-            System.out.println("✅ Používateľ kompletne aktualizovaný: " + email + " (+" + bonusXP + " XP)");
+            System.out.println("✅ User successfully updated: " + email + " (+" + bonusXP + " XP)");
 
         } catch (Exception e) {
-            System.err.println("❌ Chyba pri aktualizácii používateľa: " + e.getMessage());
+            System.err.println("❌ Error updating user after test: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 🔍 Načíta najnovšieho používateľa (Firebase priorita, H2 fallback)
+     */
+    private static Pouzivatel nacitajNajnovsiehoPozivatela(String email) {
+        System.out.println("🔍 Loading latest user data for: " + email);
+
+        // Pokus 1-2: Firebase (s retry)
+        for (int attempt = 1; attempt <= 2; attempt++) {
+            System.out.println("🔄 Firebase attempt " + attempt + "/2...");
+
+            Pouzivatel firebaseUser = firebaseManager.loadUser(email);
+            if (firebaseUser != null) {
+                System.out.println("🔥 Using Firebase data: " + email + " (XP: " + firebaseUser.getCelkoveXP() + ")");
+
+                // Aktualizuj H2 cache
+                if (existujePouzivatel(email)) {
+                    aktualizujPouzivatelaVH2(firebaseUser);
+                } else {
+                    ulozPouzivatelaDoH2(firebaseUser);
+                }
+
+                return firebaseUser;
+            }
+
+            // Krátka pauza pred ďalším pokusom
+            if (attempt < 2) {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }
+
+        // Pokus 3: H2 fallback
+        System.out.println("⚠️ Firebase unavailable - using H2 cache");
+        Pouzivatel h2User = nacitajPouzivatelaZH2(email);
+        if (h2User != null) {
+            System.out.println("📱 Using H2 cache: " + email + " (XP: " + h2User.getCelkoveXP() + ")");
+            return h2User;
+        }
+
+        System.out.println("❌ User not found in Firebase or H2: " + email);
+        return null;
+    }
+
+    /**
+     * 🔄 Synchronizuje s Firebase s retry mechanizmom
+     */
+    private static void synchronizujSFirebaseRetry(Pouzivatel pouzivatel, int maxAttempts) {
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                System.out.println("🔄 Firebase sync attempt " + attempt + "/" + maxAttempts + "...");
+
+                // Synchronizuj používateľa
+                firebaseManager.syncUser(pouzivatel);
+
+                // Krátka pauza pre dokončenie async operácie
+                Thread.sleep(2000);
+
+                // Overenie synchronizácie
+                Pouzivatel verification = firebaseManager.loadUser(pouzivatel.getEmail());
+                if (verification != null && verification.getCelkoveXP() == pouzivatel.getCelkoveXP()) {
+                    System.out.println("✅ Firebase sync verification SUCCESS! (XP: " + verification.getCelkoveXP() + ")");
+                    return;
+                } else {
+                    System.out.println("⚠️ Firebase sync verification FAILED (attempt " + attempt + ")");
+                    if (verification != null) {
+                        System.out.println("   Expected XP: " + pouzivatel.getCelkoveXP() + ", Got: " + verification.getCelkoveXP());
+                    }
+                }
+
+            } catch (Exception e) {
+                System.out.println("⚠️ Firebase sync attempt " + attempt + " failed: " + e.getMessage());
+            }
+
+            // Exponential backoff pause pred ďalším pokusom
+            if (attempt < maxAttempts) {
+                try {
+                    Thread.sleep(1000 * attempt);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }
+
+        System.out.println("⚠️ Firebase sync failed after " + maxAttempts + " attempts - data saved locally");
+    }
+
+
+
+    /**
+     * 🔍 Načíta používateľa z Firebase s fallback na H2 (s retry)
+     */
+    private static Pouzivatel nacitajPouzivatelaZFirebaseAleboH2(String email) {
+        // Pokus 1: Firebase (s časovým limitom)
+        for (int pokus = 1; pokus <= 2; pokus++) {
+            System.out.println("🔄 Firebase pokus " + pokus + "/2...");
+
+            Pouzivatel firebaseUser = firebaseManager.loadUser(email);
+            if (firebaseUser != null) {
+                System.out.println("🔥 Používam najnovšie dáta z Firebase: " + email + " (XP: " + firebaseUser.getCelkoveXP() + ")");
+
+                // Aktualizuj H2 pre offline použitie
+                if (existujePouzivatel(email)) {
+                    aktualizujPouzivatelaVH2(firebaseUser);
+                } else {
+                    ulozPouzivatelaDoH2(firebaseUser);
+                }
+
+                return firebaseUser;
+            }
+
+            // Krátka pauza pred ďalším pokusom
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+
+        // Pokus 2: H2 fallback
+        System.out.println("⚠️ Firebase nedostupný - používam H2 cache");
+        Pouzivatel h2User = nacitajPouzivatelaZH2(email);
+        if (h2User != null) {
+            System.out.println("📱 Používam cache z H2: " + email + " (XP: " + h2User.getCelkoveXP() + ")");
+            return h2User;
+        }
+
+        return null;
     }
 
     /**
@@ -284,30 +425,34 @@ public class DatabaseManager {
      * 🔍 Načíta používateľa z H2 a Firebase (UPRAVENÁ VERZIA)
      */
     public static Pouzivatel nacitajPouzivatela(String email) {
-        // Najprv skúsi Firebase pre najnovšie dáta
+        System.out.println("🔍 Loading user: " + email);
+
+        // Pokus 1: Firebase (JEDEN pokus s krátšim timeout)
         Pouzivatel firebaseUser = firebaseManager.loadUser(email);
         if (firebaseUser != null) {
-            // Uloží/aktualizuje v H2 pre offline použitie
+            System.out.println("🔥 Using Firebase data: " + email + " (XP: " + firebaseUser.getCelkoveXP() + ")");
+
+            // Aktualizuj H2 cache pre offline použitie
             if (existujePouzivatel(email)) {
                 aktualizujPouzivatelaVH2(firebaseUser);
             } else {
                 ulozPouzivatelaDoH2(firebaseUser);
             }
-            System.out.println("🔥 Používateľ načítaný z Firebase: " + email + " (XP: " + firebaseUser.getCelkoveXP() + ")");
+
             return firebaseUser;
         }
 
-        // Fallback na H2 ak Firebase nedostupný
+        // Pokus 2: H2 fallback (bez retry)
+        System.out.println("⚠️ Firebase unavailable - using H2 cache");
         Pouzivatel h2User = nacitajPouzivatelaZH2(email);
         if (h2User != null) {
-            System.out.println("📱 Používateľ načítaný z H2: " + email + " (XP: " + h2User.getCelkoveXP() + ")");
+            System.out.println("📱 Using H2 cache: " + email + " (XP: " + h2User.getCelkoveXP() + ")");
             return h2User;
         }
 
-        System.out.println("⚠️ Používateľ s emailom " + email + " nebol nájdený");
+        System.out.println("⚠️ User not found: " + email);
         return null;
     }
-
     /**
      * 💾 Uloží používateľa IBA do H2 (bez Firebase sync)
      */
@@ -334,6 +479,8 @@ public class DatabaseManager {
             return false;
         }
     }
+
+
 
 
 
@@ -481,10 +628,15 @@ public class DatabaseManager {
     /**
      * 💾 Uloží používateľa do H2 a Firebase
      */
+    /**
+     * 💾 Uloží používateľa do H2 a Firebase - OPRAVENÁ VERZIA s debug logmi
+     */
     public static boolean ulozPouzivatela(Pouzivatel pouzivatel) {
+        System.out.println("🔧 DEBUG: Starting ulozPouzivatela for: " + pouzivatel.getEmail());
+
         String sql = """
-            INSERT INTO pouzivatelia (meno, email, celkove_xp, spravne_odpovede, nespravne_odpovede) 
-            VALUES (?, ?, ?, ?, ?)""";
+        INSERT INTO pouzivatelia (meno, email, celkove_xp, spravne_odpovede, nespravne_odpovede) 
+        VALUES (?, ?, ?, ?, ?)""";
 
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -498,8 +650,20 @@ public class DatabaseManager {
             pstmt.executeUpdate();
             System.out.println("✅ Používateľ uložený do H2 Database: " + pouzivatel.getEmail());
 
-            // 🔥 Firebase sync cez FirebaseManager
-            firebaseManager.syncUser(pouzivatel);
+            // 🔥 FORCE Firebase sync s podrobným logovaním
+            System.out.println("🔧 DEBUG: About to call Firebase sync for: " + pouzivatel.getEmail());
+            System.out.println("🔧 DEBUG: User data - Name: " + pouzivatel.getMeno() +
+                    ", XP: " + pouzivatel.getCelkoveXP() +
+                    ", Correct: " + pouzivatel.getSpravneOdpovede() +
+                    ", Incorrect: " + pouzivatel.getNespravneOdpovede());
+
+            try {
+                firebaseManager.syncUser(pouzivatel);
+                System.out.println("🔧 DEBUG: Firebase sync call completed for: " + pouzivatel.getEmail());
+            } catch (Exception e) {
+                System.out.println("❌ DEBUG: Firebase sync EXCEPTION: " + e.getMessage());
+                e.printStackTrace();
+            }
 
             return true;
 

@@ -39,45 +39,25 @@ public class SpravcaHistorie {
      * @param vysledok Výsledok testu
      */
     public void ulozVysledok(VysledokTestu vysledok) {
-        // Uložíme len ak ešte nebol uložený
-        if (!vysledok.isUlozeny()) {
-            // Zabezpečíme, aby bol test ukončený pred uložením
-            if (vysledok.getCasUkoncenia() == null) {
-                vysledok.ukonciTest();
-            }
+        System.out.println("📝 Ukladám výsledok testu do databázy...");
 
-            // Nastavíme email aktuálneho používateľa
-            if (this.ovladac.getAktualnyPouzivatel() != null) {
-                vysledok.setPouzivatelEmail(this.ovladac.getAktualnyPouzivatel().getEmail());
-
-                // Aktualizujeme úspešnosť používateľa
-                this.ovladac.getAktualnyPouzivatel().pridajXP((int)(vysledok.getUspesnost() / 10));
-
-                // Aktualizujeme štatistiky
-                if (vysledok.getSpravneOdpovede() > 0) {
-                    this.ovladac.getAktualnyPouzivatel().setSpravneOdpovede(
-                            this.ovladac.getAktualnyPouzivatel().getSpravneOdpovede() + vysledok.getSpravneOdpovede()
-                    );
-                }
-
-                if (vysledok.getNespravneOdpovede() > 0) {
-                    this.ovladac.getAktualnyPouzivatel().setNespravneOdpovede(
-                            this.ovladac.getAktualnyPouzivatel().getNespravneOdpovede() + vysledok.getNespravneOdpovede()
-                    );
-                }
-
-                // Uložíme aktualizovaného používateľa do databázy
-                DatabaseManager.aktualizujPouzivatela(this.ovladac.getAktualnyPouzivatel());
-            } else {
-                vysledok.setPouzivatelEmail("unknown");
-            }
-
-            HistoriaManager.ulozVysledok(vysledok);
-            vysledok.setUlozeny(true);
-            System.out.println("Výsledok testu úspešne uložený do databázy pre používateľa: " + vysledok.getPouzivatelEmail());
-        } else {
-            System.out.println("Výsledok testu už bol predtým uložený, preskakujem.");
+        // Zabezpečíme, aby bol test ukončený pred uložením
+        if (vysledok.getCasUkoncenia() == null) {
+            vysledok.ukonciTest();
         }
+
+        // Nastavíme email aktuálneho používateľa
+        if (this.ovladac.getAktualnyPouzivatel() != null) {
+            vysledok.setPouzivatelEmail(this.ovladac.getAktualnyPouzivatel().getEmail());
+        } else {
+            vysledok.setPouzivatelEmail("unknown");
+            System.err.println("⚠️ Aktuálny používateľ nie je nastavený!");
+        }
+
+
+        DatabaseManager.ulozVysledok(vysledok);
+
+        System.out.println("✅ Výsledok testu úspešne uložený do databázy pre používateľa: " + vysledok.getPouzivatelEmail());
     }
 
 }

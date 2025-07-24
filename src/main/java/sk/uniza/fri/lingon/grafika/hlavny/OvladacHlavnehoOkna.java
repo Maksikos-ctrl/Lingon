@@ -99,20 +99,25 @@ public class  OvladacHlavnehoOkna {
      * @param vysledok Výsledok testu
      */
     public void zobrazVysledky(VysledokTestu vysledok) {
+        System.out.println("🎯 Zobrazujem výsledky testu...");
+
         // Ukončíme test, ak ešte nebol ukončený
         if (vysledok.getCasUkoncenia() == null) {
             vysledok.ukonciTest();
         }
 
-        // Uložíme výsledok do histórie (tu sa aktualizuje XP v databáze)
+        // ✅ Uložíme výsledok do databázy (tu sa automaticky vypočíta a uloží XP)
         this.spravcaHistorie.ulozVysledok(vysledok);
 
-        // 🔄 OBNOVÍME AKTUÁLNEHO POUŽÍVATEĽA S NOVÝMI XP Z DATABÁZY
+        // ✅ OBNOVÍME AKTUÁLNEHO POUŽÍVATEĽA S NOVÝMI XP Z DATABÁZY
         this.spravcaPouzivatela.obnovAktualnehoPozivatela();
 
+        // Odstránime navigačné panely a zobrazíme výsledky
         this.spravcaObrazoviek.odstranNavigaciuPanel();
         VysledkyObrazovka vysledkyObrazovka = new VysledkyObrazovka(this, vysledok);
         this.kontajner.pridajKomponent(vysledkyObrazovka);
+
+        System.out.println("✅ Výsledky testu zobrazené");
     }
 
     /**
@@ -152,10 +157,11 @@ public class  OvladacHlavnehoOkna {
      * Pridá XP body aktuálnemu používateľovi
      * @param xp Počet XP bodov
      */
+    @Deprecated
     public void pridajXP(int xp) {
-        Pouzivatel aktualny =  this.spravcaPouzivatela.getAktualnyPouzivatel();
-        if (aktualny != null) {
-            this.spravcaXP.pridajXP(xp, aktualny);
-        }
+//        Pouzivatel aktualny =  this.spravcaPouzivatela.getAktualnyPouzivatel();
+//        if (aktualny != null) {
+//            this.spravcaXP.pridajXP(xp, aktualny);
+//        }
     }
 }

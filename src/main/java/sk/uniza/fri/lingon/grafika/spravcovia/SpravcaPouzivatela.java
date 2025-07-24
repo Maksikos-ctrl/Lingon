@@ -63,11 +63,11 @@ public class SpravcaPouzivatela {
                         "Chyba",
                         JOptionPane.ERROR_MESSAGE
                 );
-                this.zobrazDialogNovehoPouzivatela(); // Zobrazíme dialóg znova
+                this.zobrazDialogNovehoPouzivatela();
                 return;
             }
 
-            // Kontrola formátu emailu pomocou regulárneho výrazu
+            // Kontrola formátu emailu
             if (!this.jeEmailValidy(email)) {
                 JOptionPane.showMessageDialog(
                         this.ovladac.getHlavneOkno(),
@@ -75,15 +75,19 @@ public class SpravcaPouzivatela {
                         "Chyba",
                         JOptionPane.ERROR_MESSAGE
                 );
-                this.zobrazDialogNovehoPouzivatela(); // Zobrazíme dialóg znova
+                this.zobrazDialogNovehoPouzivatela();
                 return;
             }
 
-            // Kontrola existencie používateľa
+            // ✅ OPRAVENÁ LOGIKA HĽADANIA/VYTVÁRANIA POUŽÍVATEĽA
+            System.out.println("🔍 Hľadám používateľa: " + email);
+
             Pouzivatel existujuciPouzivatel = DatabaseManager.nacitajPouzivatela(email);
 
             if (existujuciPouzivatel != null) {
                 // Používateľ existuje
+                System.out.println("👤 Používateľ existuje: " + existujuciPouzivatel.getMeno() + " (XP: " + existujuciPouzivatel.getCelkoveXP() + ")");
+
                 int odpoved = JOptionPane.showConfirmDialog(
                         this.ovladac.getHlavneOkno(),
                         "Používateľ s týmto emailom už existuje.\nChcete sa prihlásiť ako " +
@@ -94,18 +98,51 @@ public class SpravcaPouzivatela {
                 );
 
                 if (odpoved == JOptionPane.YES_OPTION) {
-                    // Prihlásenie
                     this.aktualnyPouzivatel = existujuciPouzivatel;
+                    System.out.println("✅ Používateľ prihlásený: " + this.aktualnyPouzivatel.getEmail());
                     this.ovladac.zobrazHlavneMenu();
                 } else {
-                    // Zrušiť a zobraziť dialóg znova
                     this.zobrazDialogNovehoPouzivatela();
                 }
             } else {
-                // Vytvorenie a uloženie nového používateľa
+                // ✅ VYTVORENIE NOVÉHO POUŽÍVATEĽA S LEPŠÍM ERROR HANDLING
+                System.out.println("👤 Vytváram nového používateľa: " + meno + " (" + email + ")");
+
                 this.aktualnyPouzivatel = new Pouzivatel(meno, email);
-                DatabaseManager.ulozPouzivatela(this.aktualnyPouzivatel);
-                this.ovladac.zobrazHlavneMenu();
+                System.out.println("🔧 DEBUG: Calling DatabaseManager.ulozPouzivatela...");
+                boolean ulozenyDoH2 = DatabaseManager.ulozPouzivatela(this.aktualnyPouzivatel);
+
+                if (ulozenyDoH2) {
+                    System.out.println("✅ Nový používateľ vytvorený a uložený: " + email);
+
+                    System.out.println("🔧 DEBUG: Waiting for Firebase sync to complete...");
+
+                    // Krátka pauza pre Firebase sync
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+
+                    System.out.println("🔧 DEBUG: Verifying Firebase sync...");
+                    // Overenie že sa používateľ načítal správne (vrátane Firebase)
+                    Pouzivatel overenyPouzivatel = DatabaseManager.nacitajPouzivatela(email);
+                    if (overenyPouzivatel != null) {
+                        this.aktualnyPouzivatel = overenyPouzivatel;
+                        System.out.println("✅ Používateľ overený a načítaný: " + email);
+                    }
+
+                    this.ovladac.zobrazHlavneMenu();
+                } else {
+                    System.err.println("❌ Nepodarilo sa uložiť používateľa do databázy");
+                    JOptionPane.showMessageDialog(
+                            this.ovladac.getHlavneOkno(),
+                            "Nepodarilo sa vytvoriť nového používateľa.\nSkúste to znova.",
+                            "Chyba databázy",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                    this.zobrazDialogNovehoPouzivatela();
+                }
             }
         }
     }
@@ -134,6 +171,8 @@ public class SpravcaPouzivatela {
     public void obnovAktualnehoPozivatela() {
         if (this.aktualnyPouzivatel != null) {
             String email = this.aktualnyPouzivatel.getEmail();
+            System.out.println("🔄 Obnovovanie používateľa: " + email);
+
             Pouzivatel obnovenyPouzivatel = DatabaseManager.nacitajPouzivatela(email);
 
             if (obnovenyPouzivatel != null) {
@@ -144,6 +183,14 @@ public class SpravcaPouzivatela {
 
                 System.out.println("🔄 UI používateľ obnovený: " + email +
                         " (XP: " + stareXP + " → " + noveXP + ")");
+
+                // Debug informácie
+                System.out.println("📊 Aktuálny stav používateľa:");
+                System.out.println("   - Meno: " + this.aktualnyPouzivatel.getMeno());
+                System.out.println("   - Email: " + this.aktualnyPouzivatel.getEmail());
+                System.out.println("   - XP: " + this.aktualnyPouzivatel.getCelkoveXP());
+                System.out.println("   - Správne: " + this.aktualnyPouzivatel.getSpravneOdpovede());
+                System.out.println("   - Nesprávne: " + this.aktualnyPouzivatel.getNespravneOdpovede());
             } else {
                 System.err.println("❌ Nepodarilo sa obnoviť používateľa: " + email);
             }
